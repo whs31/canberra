@@ -1,0 +1,42 @@
+[workspace]
+members = ["canberra_api","canberra_app",
+    "canberra_bin"
+]
+
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+authors = [
+    "whs31 <whs31@github.io>"
+]
+license = "BSL-1"
+repository = "https://github.com/whs31/canberra"
+
+[workspace.dependencies]
+anyhow = "1.0.100"
+breakpad-sys = "0.2.0"
+cargo-build = "1.0.0"
+cc = "1.2.43"
+chrono = "0.4.42"
+cpp = "0.5.10"
+cpp_build = "0.5.10"
+cstr = "0.2.12"
+log = "0.4.28"
+qmetaobject = "0.2.10"
+qttypes = "0.2.12"
+canberra_api = { path = "canberra_api" }
+uuid = "1.18.1"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
+
+[workspace.metadata.typos.default]
+extend-ignore-words-re = [
+    '^[a-zA-Z]{1,2}$' # ignore words up to length 2
+]

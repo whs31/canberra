@@ -1,0 +1,17 @@
+[package]
+name = "canberra_bin"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+default-run = "canberra"
+
+[[bin]]
+name = "canberra"
+path = "src/main.rs"
+
+[dependencies]
+canberra_app = { path = "../canberra_app" }
+
+anyhow = { workspace = true }

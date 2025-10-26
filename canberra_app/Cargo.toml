@@ -1,0 +1,28 @@
+[package]
+name = "canberra_app"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+canberra_api = { workspace = true }
+
+anyhow = { workspace = true }
+log = { workspace = true }
+chrono = { workspace = true }
+semver = "1.0.27"
+
+breakpad-sys = { workspace = true }
+
+cstr = { workspace = true }
+cpp = { workspace = true }
+qmetaobject = { workspace = true, features = ["log"] }
+qttypes = { workspace = true, features = ["chrono", "qtquick", "qtquickcontrols2", "required"] }
+
+[build-dependencies]
+semver = "1.0.27"
+cc = { workspace = true }
+cpp_build = { workspace = true }
+cargo-build = { workspace = true }
