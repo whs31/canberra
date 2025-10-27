@@ -8,8 +8,6 @@ cpp! {{
   #include <qglobal.h>
   #include <qqml.h>
   #include <qquickitem.h>
-
-  using CreatorFunction = void(*)(void*, void*);
 }}
 
 #[derive(Debug)]
