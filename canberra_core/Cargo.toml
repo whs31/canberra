@@ -9,14 +9,15 @@ repository.workspace = true
 [dependencies]
 anyhow = { workspace = true }
 uuid = { workspace = true }
+log = { workspace = true }
 semver = { workspace = true }
-once_cell = "1.21.3"
+once_cell = { workspace = true }
 
 qmetaobject = { workspace = true }
 qttypes = { workspace = true }
-cpp = "0.5.10"
+cpp = { workspace = true }
 
 [build-dependencies]
-cpp_build = "0.5.10"
-semver = "1.0.27"
-cargo-build = "1.0.0"
+cpp_build = { workspace = true }
+semver = { workspace = true }
+cargo-build = { workspace = true }
