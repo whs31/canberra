@@ -1,10 +1,6 @@
 use anyhow::Result;
 use qmetaobject::prelude::*;
 
-cpp::cpp! {{
-  #include <qquickstyle.h>
-}}
-
 pub struct Application {
   qml_engine: QmlEngine,
 }
@@ -17,9 +13,7 @@ impl Default for Application {
 
 impl Application {
   pub fn new() -> Self {
-    cpp::cpp! {{
-      QQuickStyle::setStyle("Material");
-    }}
+    qmetaobject::qtquickcontrols2::QQuickStyle::set_style("FluentWinUI3");
     Self {
       qml_engine: QmlEngine::new(),
     }

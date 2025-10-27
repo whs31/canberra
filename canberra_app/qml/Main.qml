@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Material
+import QtQuick.Controls.FluentWinUI3
 import QtQuick.Window
 
 ApplicationWindow {
@@ -8,10 +8,9 @@ ApplicationWindow {
     width: 640
     height: 480
     title: "Canberra"
-    Material.theme: Material.Dark
     Text {
         anchors.centerIn: parent
-        text: "hi from rust (i changed this line just now)"
+        text: "hi from rust"
     }
 
     Button {

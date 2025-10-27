@@ -12,6 +12,6 @@ name = "canberra"
 path = "src/main.rs"
 
 [dependencies]
-canberra_app = { path = "../canberra_app" }
+canberra_app = { workspace = true }
 
 anyhow = { workspace = true }

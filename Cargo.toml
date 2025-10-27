@@ -1,6 +1,10 @@
 [workspace]
-members = ["canberra_api","canberra_app",
-    "canberra_bin"
+members = [
+    "canberra_core",
+    "qt",
+    "canberra_api",
+    "canberra_app",
+    "canberra_bin",
 ]
 
 resolver = "2"
@@ -28,6 +32,8 @@ qmetaobject = "0.2.10"
 qttypes = "0.2.12"
 canberra_api = { path = "canberra_api" }
 uuid = "1.18.1"
+canberra_app = { path = "canberra_app" }
+semver = "1.0.27"
 
 [profile.release]
 opt-level = 3

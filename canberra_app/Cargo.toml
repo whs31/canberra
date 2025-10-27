@@ -12,7 +12,7 @@ canberra_api = { workspace = true }
 anyhow = { workspace = true }
 log = { workspace = true }
 chrono = { workspace = true }
-semver = "1.0.27"
+semver = { workspace = true }
 
 breakpad-sys = { workspace = true }
 
@@ -22,7 +22,7 @@ qmetaobject = { workspace = true, features = ["log"] }
 qttypes = { workspace = true, features = ["chrono", "qtquick", "qtquickcontrols2", "required"] }
 
 [build-dependencies]
-semver = "1.0.27"
+semver = { workspace = true }
 cc = { workspace = true }
 cpp_build = { workspace = true }
 cargo-build = { workspace = true }

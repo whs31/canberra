@@ -89,6 +89,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "canberra_core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cpp",
+ "cpp_build",
+ "qmetaobject",
+ "qttypes",
+ "semver",
+ "uuid",
+]
+
+[[package]]
 name = "cargo-build"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -326,6 +339,10 @@ dependencies = [
  "quote",
  "syn 1.0.109",
 ]
+
+[[package]]
+name = "qt"
+version = "0.1.0"
 
 [[package]]
 name = "qttypes"
