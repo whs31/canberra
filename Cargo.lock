@@ -93,8 +93,10 @@ name = "canberra_core"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "cargo-build",
  "cpp",
  "cpp_build",
+ "once_cell",
  "qmetaobject",
  "qttypes",
  "semver",

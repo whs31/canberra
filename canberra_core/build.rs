@@ -1,4 +1,6 @@
 fn main() {
+  cargo_build::rerun_if_changed(["src/lib.rs", "src/qml.rs"]);
+  
   let qt_include_path = std::env::var("DEP_QT_INCLUDE_PATH").unwrap();
   let qt_library_path = std::env::var("DEP_QT_LIBRARY_PATH").unwrap();
   let qt_version = std::env::var("DEP_QT_VERSION")
