@@ -216,5 +216,5 @@ fn qml_register_uncreatable_type<T: QObject + Sized>(
           /*revision*/ {}  // FIXME: support revisions?
       };
       QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &api);
-  })
+  });
 }

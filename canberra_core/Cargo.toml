@@ -8,7 +8,8 @@ repository.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
-uuid = { workspace = true }
+uuid = { workspace = true, features = ["serde", "v4"] }
+serde = { workspace = true, features = ["derive"] }
 log = { workspace = true }
 semver = { workspace = true }
 once_cell = { workspace = true }

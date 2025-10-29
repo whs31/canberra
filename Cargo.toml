@@ -37,6 +37,7 @@ semver = "1.0.27"
 canberra_core = { path = "canberra_core" }
 once_cell = "1.21.3"
 flexi_logger = "0.31.7"
+serde = "1.0.228"
 
 [profile.release]
 opt-level = 3
