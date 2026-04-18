@@ -1,5 +1,5 @@
 [package]
-name = "canberra_app"
+name = "canberra_bin"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -8,23 +8,11 @@ repository.workspace = true
 
 [dependencies]
 canberra_core = { workspace = true }
-canberra_api = { workspace = true }
+canberra_renderer = { workspace = true }
 
-anyhow = { workspace = true }
-log = { workspace = true }
-chrono = { workspace = true }
-semver = { workspace = true }
-
-flexi_logger = { workspace = true, features = ["default", "colors"] }
-breakpad-sys = { workspace = true }
-
-cstr = { workspace = true }
-cpp = { workspace = true }
-qmetaobject = { workspace = true, features = ["log"] }
-qttypes = { workspace = true, features = ["chrono", "qtquick", "qtquickcontrols2", "required"] }
-
-[build-dependencies]
-semver = { workspace = true }
-cc = { workspace = true }
-cpp_build = { workspace = true }
-cargo-build = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+winit = { workspace = true }
+egui = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+pollster = { workspace = true }

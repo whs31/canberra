@@ -1,10 +1,7 @@
 [workspace]
 members = [
-    "canberra_core",
-    "qt",
-    "canberra_api",
     "canberra_app",
-    "canberra_bin",
+    "canberra_core", "canberra_renderer",
 ]
 
 resolver = "2"
@@ -19,25 +16,33 @@ license = "BSL-1"
 repository = "https://github.com/whs31/canberra"
 
 [workspace.dependencies]
-anyhow = "1.0.100"
-breakpad-sys = "0.2.0"
-cargo-build = "1.0.0"
-cc = "1.2.43"
-chrono = "0.4.42"
-cpp = "0.5.10"
-cpp_build = "0.5.10"
-cstr = "0.2.12"
-log = "0.4.28"
-qmetaobject = "0.2.10"
-qttypes = "0.2.12"
-canberra_api = { path = "canberra_api" }
-uuid = "1.18.1"
-canberra_app = { path = "canberra_app" }
-semver = "1.0.27"
-canberra_core = { path = "canberra_core" }
-once_cell = "1.21.3"
-flexi_logger = "0.31.7"
-serde = "1.0.228"
+# project
+canberra_core = { path = "./canberra_core" }
+canberra_renderer = { path = "./canberra_renderer" }
+
+# core
+thiserror = "2"
+
+# logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# window/gpu
+wgpu = "29"
+winit = "0.30"
+
+# gui
+egui = "0.34"
+egui-wgpu = "0.34"
+egui-winit = "0.34"
+
+# async
+tokio = { version = "1", features = ["full"] }
+pollster = "0.4"
+
+# math / raw-bytes
+bytemuck = { version = "1", features = ["derive"] }
+glam = { version = "0.32", features = ["bytemuck"] }
 
 [profile.release]
 opt-level = 3
