@@ -1,9 +1,7 @@
 [workspace]
 members = [
     "canberra_app",
-    "canberra_core",
-    "canberra_renderer",
-    "canberra_scene",
+    "canberra_engine",
 ]
 
 resolver = "2"
@@ -19,12 +17,11 @@ repository = "https://github.com/whs31/canberra"
 
 [workspace.dependencies]
 # project
-canberra_core = { path = "./canberra_core" }
-canberra_renderer = { path = "./canberra_renderer" }
-canberra_scene = { path = "./canberra_scene" }
+canberra_engine = { path = "./canberra_engine" }
 
 # core
 thiserror = "2"
+uuid = { version = "1", features = ["v4"] }
 
 # logging
 tracing = "0.1"
@@ -46,6 +43,7 @@ pollster = "0.4"
 # math / raw-bytes
 bytemuck = { version = "1", features = ["derive"] }
 glam = { version = "0.32", features = ["bytemuck"] }
+num-traits = { version = "0.2" }
 
 [profile.release]
 opt-level = 3

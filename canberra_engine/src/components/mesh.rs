@@ -1,12 +1,18 @@
 use wgpu::util::DeviceExt;
 
-use crate::Vertex;
+use crate::{Component, Vertex};
 
 #[derive(Debug, Clone)]
 pub struct Mesh {
   pub vertex_buffer: wgpu::Buffer,
   pub index_buffer: wgpu::Buffer,
-  pub num_indices: u32,
+  pub index_count: u32,
+}
+
+impl Component for Mesh {
+  fn name(&self) -> &'static str {
+    "Mesh"
+  }
 }
 
 impl Mesh {
@@ -22,7 +28,7 @@ impl Mesh {
         contents: bytemuck::cast_slice(indices),
         usage: wgpu::BufferUsages::INDEX,
       }),
-      num_indices: indices.len() as u32,
+      index_count: indices.len() as u32,
     }
   }
 

@@ -1,0 +1,22 @@
+[package]
+name = "canberra_engine"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+thiserror = { workspace = true }
+tracing = { workspace = true }
+wgpu = { workspace = true }
+winit = { workspace = true }
+egui = { workspace = true }
+egui-wgpu = { workspace = true }
+egui-winit = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+pollster = { workspace = true }
+bytemuck = { workspace = true, features = ["derive"] }
+glam = { workspace = true, features = ["bytemuck"] }
+num-traits = { workspace = true }
+uuid = { workspace = true, features = ["v4"] }
