@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use winit::window::Window;
 
-use crate::{Result, scene::DEPTH_FORMAT};
+use crate::{DEPTH_FORMAT, Result};
 
 pub struct Renderer {
   pub surface: wgpu::Surface<'static>,
@@ -11,6 +11,21 @@ pub struct Renderer {
   pub surface_config: wgpu::SurfaceConfiguration,
   pub size: winit::dpi::PhysicalSize<u32>,
   depth_view: wgpu::TextureView,
+}
+
+/// State for a single in-flight frame.
+///
+/// Created by [`Renderer::begin_frame`] and consumed by [`Frame::present`].
+/// Dropping the frame without presenting discards the acquired surface image.
+pub struct Frame<'a> {
+  pub device: &'a wgpu::Device,
+  pub queue: &'a wgpu::Queue,
+  pub surface_config: &'a wgpu::SurfaceConfiguration,
+  pub window: &'a Window,
+  pub color_view: wgpu::TextureView,
+  pub depth_view: &'a wgpu::TextureView,
+  pub encoder: wgpu::CommandEncoder,
+  surface_texture: wgpu::SurfaceTexture,
 }
 
 fn create_depth_view(
@@ -111,45 +126,48 @@ impl Renderer {
     self.depth_view = create_depth_view(&self.device, &self.surface_config);
   }
 
-  pub fn render(
-    &mut self,
-    window: &Window,
-    scene: &crate::SceneRenderer,
-    ui: &mut crate::UiRenderer,
-  ) -> Result<()> {
-    let frame = match self.surface.get_current_texture() {
+  /// Acquire the next surface image and build a [`Frame`] ready for rendering.
+  ///
+  /// Returns `Ok(None)` when the frame should be skipped (occluded, timeout,
+  /// surface just reconfigured). The caller is expected to request a redraw
+  /// and try again.
+  pub fn begin_frame<'a>(&'a mut self, window: &'a Window) -> Result<Option<Frame<'a>>> {
+    let surface_texture = match self.surface.get_current_texture() {
       wgpu::CurrentSurfaceTexture::Success(f) | wgpu::CurrentSurfaceTexture::Suboptimal(f) => f,
       wgpu::CurrentSurfaceTexture::Lost | wgpu::CurrentSurfaceTexture::Outdated => {
         self.surface.configure(&self.device, &self.surface_config);
-        return Ok(());
+        return Ok(None);
       }
       wgpu::CurrentSurfaceTexture::Timeout
       | wgpu::CurrentSurfaceTexture::Occluded
-      | wgpu::CurrentSurfaceTexture::Validation => return Ok(()),
+      | wgpu::CurrentSurfaceTexture::Validation => return Ok(None),
     };
-    let view = frame
+    let color_view = surface_texture
       .texture
       .create_view(&wgpu::TextureViewDescriptor::default());
-
-    scene.update(&self.queue, self.surface_config.width, self.surface_config.height);
-
-    let mut encoder = self
+    let encoder = self
       .device
-      .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("frame encoder") });
-
-    scene.render(&mut encoder, &view, &self.depth_view);
-    ui.render(
-      &self.device,
-      &self.queue,
+      .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+        label: Some("frame encoder"),
+      });
+    Ok(Some(Frame {
+      device: &self.device,
+      queue: &self.queue,
+      surface_config: &self.surface_config,
       window,
-      &mut encoder,
-      &view,
-      &self.surface_config,
-    );
+      color_view,
+      depth_view: &self.depth_view,
+      encoder,
+      surface_texture,
+    }))
+  }
+}
 
-    self.queue.submit(std::iter::once(encoder.finish()));
-    window.pre_present_notify();
-    frame.present();
-    Ok(())
+impl<'a> Frame<'a> {
+  /// Submit the encoder, notify the window, and present the acquired image.
+  pub fn present(self) {
+    self.queue.submit(std::iter::once(self.encoder.finish()));
+    self.window.pre_present_notify();
+    self.surface_texture.present();
   }
 }

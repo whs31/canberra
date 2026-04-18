@@ -1,10 +1,9 @@
 use std::time::Instant;
 
 use bytemuck::{Pod, Zeroable};
+use canberra_renderer::{DEPTH_FORMAT, Frame};
 use glam::{Mat4, Vec3};
 use wgpu::util::DeviceExt;
-
-pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
 
 #[repr(C)]
 #[derive(Copy, Clone, Pod, Zeroable)]
@@ -20,29 +19,39 @@ struct Uniforms {
 }
 
 const CUBE_VERTICES: &[Vertex] = &[
-  Vertex { position: [-1.0, -1.0, -1.0] },
-  Vertex { position: [ 1.0, -1.0, -1.0] },
-  Vertex { position: [ 1.0, -1.0,  1.0] },
-  Vertex { position: [-1.0, -1.0,  1.0] },
-  Vertex { position: [-1.0,  1.0, -1.0] },
-  Vertex { position: [ 1.0,  1.0, -1.0] },
-  Vertex { position: [ 1.0,  1.0,  1.0] },
-  Vertex { position: [-1.0,  1.0,  1.0] },
+  Vertex {
+    position: [-1.0, -1.0, -1.0],
+  },
+  Vertex {
+    position: [1.0, -1.0, -1.0],
+  },
+  Vertex {
+    position: [1.0, -1.0, 1.0],
+  },
+  Vertex {
+    position: [-1.0, -1.0, 1.0],
+  },
+  Vertex {
+    position: [-1.0, 1.0, -1.0],
+  },
+  Vertex {
+    position: [1.0, 1.0, -1.0],
+  },
+  Vertex {
+    position: [1.0, 1.0, 1.0],
+  },
+  Vertex {
+    position: [-1.0, 1.0, 1.0],
+  },
 ];
 
 #[rustfmt::skip]
 const CUBE_INDICES: &[u16] = &[
-  // bottom (y = -1), normal -Y: when viewed from below, CCW
   0, 2, 1,  0, 3, 2,
-  // top (y = +1), normal +Y
   4, 5, 6,  4, 6, 7,
-  // front (z = +1)
   3, 6, 2,  3, 7, 6,
-  // back (z = -1)
   0, 1, 5,  0, 5, 4,
-  // left (x = -1)
   0, 7, 3,  0, 4, 7,
-  // right (x = +1)
   1, 2, 6,  1, 6, 5,
 ];
 
@@ -71,7 +80,7 @@ fn fs_main(_in: VsOut) -> @location(0) vec4<f32> {
 }
 "#;
 
-pub struct SceneRenderer {
+pub struct Cube {
   pipeline: wgpu::RenderPipeline,
   vertex_buffer: wgpu::Buffer,
   index_buffer: wgpu::Buffer,
@@ -81,10 +90,10 @@ pub struct SceneRenderer {
   start: Instant,
 }
 
-impl SceneRenderer {
+impl Cube {
   pub fn new(device: &wgpu::Device, color_format: wgpu::TextureFormat) -> Self {
     let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-      label: Some("scene shader"),
+      label: Some("cube shader"),
       source: wgpu::ShaderSource::Wgsl(SHADER.into()),
     });
 
@@ -101,14 +110,14 @@ impl SceneRenderer {
     });
 
     let uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-      label: Some("scene uniforms"),
+      label: Some("cube uniforms"),
       size: std::mem::size_of::<Uniforms>() as u64,
       usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
       mapped_at_creation: false,
     });
 
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-      label: Some("scene bgl"),
+      label: Some("cube bgl"),
       entries: &[wgpu::BindGroupLayoutEntry {
         binding: 0,
         visibility: wgpu::ShaderStages::VERTEX,
@@ -122,7 +131,7 @@ impl SceneRenderer {
     });
 
     let uniform_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-      label: Some("scene bg"),
+      label: Some("cube bg"),
       layout: &bind_group_layout,
       entries: &[wgpu::BindGroupEntry {
         binding: 0,
@@ -131,13 +140,13 @@ impl SceneRenderer {
     });
 
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-      label: Some("scene pipeline layout"),
+      label: Some("cube pipeline layout"),
       bind_group_layouts: &[Some(&bind_group_layout)],
       immediate_size: 0,
     });
 
     let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-      label: Some("scene pipeline"),
+      label: Some("cube pipeline"),
       layout: Some(&pipeline_layout),
       vertex: wgpu::VertexState {
         module: &shader,
@@ -195,7 +204,7 @@ impl SceneRenderer {
     }
   }
 
-  pub fn update(&self, queue: &wgpu::Queue, width: u32, height: u32) {
+  fn update(&self, queue: &wgpu::Queue, width: u32, height: u32) {
     let aspect = width as f32 / height.max(1) as f32;
     let proj = Mat4::perspective_rh(45f32.to_radians(), aspect, 0.1, 100.0);
     let view = Mat4::look_at_rh(Vec3::new(3.0, 2.5, 4.0), Vec3::ZERO, Vec3::Y);
@@ -208,35 +217,44 @@ impl SceneRenderer {
     queue.write_buffer(&self.uniform_buffer, 0, bytemuck::bytes_of(&uniforms));
   }
 
-  pub fn render(
-    &self,
-    encoder: &mut wgpu::CommandEncoder,
-    color: &wgpu::TextureView,
-    depth: &wgpu::TextureView,
-  ) {
-    let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-      label: Some("scene pass"),
-      color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-        view: color,
-        resolve_target: None,
-        depth_slice: None,
-        ops: wgpu::Operations {
-          load: wgpu::LoadOp::Clear(wgpu::Color { r: 0.05, g: 0.05, b: 0.08, a: 1.0 }),
-          store: wgpu::StoreOp::Store,
-        },
-      })],
-      depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-        view: depth,
-        depth_ops: Some(wgpu::Operations {
-          load: wgpu::LoadOp::Clear(1.0),
-          store: wgpu::StoreOp::Store,
+  /// Clear the color & depth targets and draw the cube into the current frame.
+  pub fn render(&self, frame: &mut Frame<'_>) {
+    self.update(
+      frame.queue,
+      frame.surface_config.width,
+      frame.surface_config.height,
+    );
+
+    let mut pass = frame
+      .encoder
+      .begin_render_pass(&wgpu::RenderPassDescriptor {
+        label: Some("cube pass"),
+        color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+          view: &frame.color_view,
+          resolve_target: None,
+          depth_slice: None,
+          ops: wgpu::Operations {
+            load: wgpu::LoadOp::Clear(wgpu::Color {
+              r: 0.05,
+              g: 0.05,
+              b: 0.08,
+              a: 1.0,
+            }),
+            store: wgpu::StoreOp::Store,
+          },
+        })],
+        depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+          view: frame.depth_view,
+          depth_ops: Some(wgpu::Operations {
+            load: wgpu::LoadOp::Clear(1.0),
+            store: wgpu::StoreOp::Store,
+          }),
+          stencil_ops: None,
         }),
-        stencil_ops: None,
-      }),
-      timestamp_writes: None,
-      occlusion_query_set: None,
-      multiview_mask: None,
-    });
+        timestamp_writes: None,
+        occlusion_query_set: None,
+        multiview_mask: None,
+      });
 
     pass.set_pipeline(&self.pipeline);
     pass.set_bind_group(0, &self.uniform_bind_group, &[]);

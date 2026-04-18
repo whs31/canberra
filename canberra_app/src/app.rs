@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-use canberra_renderer::{Renderer, SceneRenderer, UiRenderer};
+use canberra_renderer::{Renderer, UiRenderer};
+use canberra_scene::{Cube, DebugUi};
 use winit::{
   event::{DeviceEvent, DeviceId, WindowEvent},
   event_loop::ActiveEventLoop,
@@ -19,8 +20,9 @@ pub struct ApplicationState {
   pub rt: tokio::runtime::Runtime,
   pub window: Arc<winit::window::Window>,
   pub renderer: Renderer,
-  pub scene: SceneRenderer,
   pub ui: UiRenderer,
+  pub cube: Cube,
+  pub debug_ui: DebugUi,
 }
 
 impl Application {
@@ -36,25 +38,35 @@ impl Application {
   }
 
   fn init(&mut self, event_loop: &ActiveEventLoop) -> Result<()> {
-    let Self::Uninitialized(rt) = self else { return Ok(()) };
+    let Self::Uninitialized(rt) = self else {
+      return Ok(());
+    };
 
     let window_attrs = winit::window::Window::default_attributes()
-      .with_title("canberra")
+      .with_title("Canberra")
       .with_inner_size(winit::dpi::LogicalSize::new(1280.0, 800.0));
     let window = Arc::new(event_loop.create_window(window_attrs)?);
 
     let renderer = rt.block_on(Renderer::new(window.clone()))?;
-    let scene = SceneRenderer::new(&renderer.device, renderer.surface_config.format);
     let ui = UiRenderer::new(&renderer.device, renderer.surface_config.format, &window);
+    let cube = Cube::new(&renderer.device, renderer.surface_config.format);
+    let debug_ui = DebugUi::new();
 
     let Self::Uninitialized(rt) = std::mem::replace(
       self,
-      Self::Uninitialized(tokio::runtime::Builder::new_current_thread().build()?),
+      Self::Uninitialized(tokio::runtime::Builder::new_multi_thread().build()?),
     ) else {
       unreachable!("checked above");
     };
 
-    *self = Self::Ready(ApplicationState { rt, window, renderer, scene, ui });
+    *self = Self::Ready(ApplicationState {
+      rt,
+      window,
+      renderer,
+      ui,
+      cube,
+      debug_ui,
+    });
     Ok(())
   }
 }
@@ -73,10 +85,15 @@ impl winit::application::ApplicationHandler for Application {
     _window_id: WindowId,
     event: WindowEvent,
   ) {
-    let Application::Ready(state) = self else { return };
+    let Application::Ready(state) = self else {
+      return;
+    };
 
-    if state.ui.handle_event(&state.window, &event) {
+    let resp = state.ui.handle_event(&state.window, &event);
+    if resp.repaint {
       state.window.request_redraw();
+    }
+    if resp.consumed {
       return;
     }
 
@@ -87,10 +104,24 @@ impl winit::application::ApplicationHandler for Application {
         state.window.request_redraw();
       }
       WindowEvent::RedrawRequested => {
-        if let Err(err) = state.renderer.render(&state.window, &state.scene, &mut state.ui) {
-          tracing::error!("render error: {err}");
+        let ApplicationState {
+          window,
+          renderer,
+          cube,
+          ui,
+          debug_ui,
+          ..
+        } = state;
+        match renderer.begin_frame(window.as_ref()) {
+          Ok(Some(mut frame)) => {
+            cube.render(&mut frame);
+            ui.render(&mut frame, |ctx| debug_ui.show(ctx));
+            frame.present();
+          }
+          Ok(None) => {}
+          Err(err) => tracing::error!("render error: {err}"),
         }
-        state.window.request_redraw();
+        window.request_redraw();
       }
       _ => {}
     }
@@ -108,7 +139,14 @@ impl winit::application::ApplicationHandler for Application {
   }
 
   fn suspended(&mut self, _event_loop: &ActiveEventLoop) {
-    // todo: drop the surface here
+    if let Self::Ready(_) = self {
+      let Self::Ready(state) = std::mem::replace(self, Self::Shutdown) else {
+        unreachable!();
+      };
+      // Drop the surface/window/GPU state, keep the async runtime so any
+      // background tasks survive the suspend. resumed() will rebuild everything.
+      *self = Self::Uninitialized(state.rt);
+    }
   }
 
   fn exiting(&mut self, _event_loop: &ActiveEventLoop) {

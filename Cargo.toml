@@ -1,7 +1,9 @@
 [workspace]
 members = [
     "canberra_app",
-    "canberra_core", "canberra_renderer",
+    "canberra_core",
+    "canberra_renderer",
+    "canberra_scene",
 ]
 
 resolver = "2"
@@ -19,6 +21,7 @@ repository = "https://github.com/whs31/canberra"
 # project
 canberra_core = { path = "./canberra_core" }
 canberra_renderer = { path = "./canberra_renderer" }
+canberra_scene = { path = "./canberra_scene" }
 
 # core
 thiserror = "2"

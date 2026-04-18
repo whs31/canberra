@@ -1,5 +1,5 @@
 [package]
-name = "canberra_renderer"
+name = "canberra_scene"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -7,10 +7,9 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-winit = { workspace = true }
+canberra_renderer = { workspace = true }
+
 wgpu = { workspace = true }
-tracing = { workspace = true }
-thiserror = { workspace = true }
 egui = { workspace = true }
-egui-wgpu = { workspace = true }
-egui-winit = { workspace = true }
+bytemuck = { workspace = true }
+glam = { workspace = true }

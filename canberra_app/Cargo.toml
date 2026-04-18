@@ -9,6 +9,7 @@ repository.workspace = true
 [dependencies]
 canberra_core = { workspace = true }
 canberra_renderer = { workspace = true }
+canberra_scene = { workspace = true }
 
 thiserror = { workspace = true }
 tracing = { workspace = true }

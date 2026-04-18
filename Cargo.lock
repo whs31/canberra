@@ -294,6 +294,7 @@ version = "0.1.0"
 dependencies = [
  "canberra_core",
  "canberra_renderer",
+ "canberra_scene",
  "egui",
  "pollster",
  "thiserror 2.0.18",
@@ -313,15 +314,24 @@ dependencies = [
 name = "canberra_renderer"
 version = "0.1.0"
 dependencies = [
- "bytemuck",
  "egui",
  "egui-wgpu",
  "egui-winit",
- "glam",
  "thiserror 2.0.18",
  "tracing",
  "wgpu",
  "winit",
+]
+
+[[package]]
+name = "canberra_scene"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "canberra_renderer",
+ "egui",
+ "glam",
+ "wgpu",
 ]
 
 [[package]]
