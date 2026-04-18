@@ -307,7 +307,10 @@ dependencies = [
 name = "canberra_core"
 version = "0.1.0"
 dependencies = [
+ "bytemuck",
+ "glam",
  "tracing-subscriber",
+ "wgpu",
 ]
 
 [[package]]
@@ -317,6 +320,7 @@ dependencies = [
  "egui",
  "egui-wgpu",
  "egui-winit",
+ "glam",
  "thiserror 2.0.18",
  "tracing",
  "wgpu",
