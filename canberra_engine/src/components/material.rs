@@ -9,7 +9,9 @@ pub struct Material {
 
 impl Default for Material {
   fn default() -> Self {
-    Self { color: [1.0, 1.0, 1.0, 1.0] }
+    Self {
+      color: [1.0, 1.0, 1.0, 1.0],
+    }
   }
 }
 

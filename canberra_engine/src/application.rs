@@ -40,6 +40,8 @@ impl winit::application::ApplicationHandler for Application {
       None => return,
     };
 
+    state.on_window_event(&event);
+
     match event {
       winit::event::WindowEvent::CloseRequested => event_loop.exit(),
       winit::event::WindowEvent::Resized(size) => state.resize(size.width, size.height),

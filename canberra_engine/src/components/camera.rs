@@ -14,7 +14,12 @@ pub struct Camera {
 
 impl Camera {
   pub fn new(fov_y: f32, aspect: f32, near: f32, far: f32) -> Self {
-    Self { fov_y, aspect, near, far }
+    Self {
+      fov_y,
+      aspect,
+      near,
+      far,
+    }
   }
 
   pub fn projection_matrix(&self) -> Mat4 {

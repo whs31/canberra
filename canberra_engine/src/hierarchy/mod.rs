@@ -1,4 +1,4 @@
-mod entity;
 mod component;
+mod entity;
 
-pub use self::{entity::Entity, component::Component};
+pub use self::{component::Component, entity::Entity};

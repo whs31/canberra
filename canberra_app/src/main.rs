@@ -1,9 +1,12 @@
 mod error;
 
-pub use self::error::{Error, Result};
-
-use canberra_engine::{Application, Entity, Scene, components::{Camera, Material, Mesh, Transform}};
+use canberra_engine::{
+  Application, DebugUI, Entity, Scene,
+  components::{Camera, Material, Mesh, Transform},
+};
 use glam::Vec3;
+
+pub use self::error::{Error, Result};
 
 fn try_main() -> Result<()> {
   Application::run(|device| {
@@ -16,25 +19,66 @@ fn try_main() -> Result<()> {
     scene.add(cam);
 
     // 3 cubes of different colors
-    let unique_colors: [[f32; 4]; 3] = [
-      [0.9, 0.2, 0.2, 1.0],
-      [0.2, 0.9, 0.2, 1.0],
-      [0.2, 0.4, 0.9, 1.0],
+    let unique: &[([f32; 4], &str)] = &[
+      ([0.9, 0.2, 0.2, 1.0], "Cube_Red"),
+      ([0.2, 0.9, 0.2, 1.0], "Cube_Green"),
+      ([0.2, 0.4, 0.9, 1.0], "Cube_Blue"),
     ];
-    for (i, &color) in unique_colors.iter().enumerate() {
-      let mut e = Entity::new(&format!("Cube_{i}"));
-      e.add_component(Transform::from_translation(Vec3::new((i as f32 - 1.0) * 3.0, -1.5, 0.0)));
+    for (i, &(color, name)) in unique.iter().enumerate() {
+      let mut e = Entity::new(name);
+      e.add_component(Transform::from_translation(Vec3::new(
+        (i as f32 - 1.0) * 3.0,
+        -1.5,
+        0.0,
+      )));
       e.add_component(Mesh::default_cube(device));
       e.add_component(Material::with_color(color));
+      let label = name.to_string();
+      e.add_component(DebugUI::new(move |ctx| {
+        egui::Window::new(&label).show(ctx, |ui| {
+          ui.colored_label(
+            egui::Color32::from_rgb(
+              (color[0] * 255.0) as u8,
+              (color[1] * 255.0) as u8,
+              (color[2] * 255.0) as u8,
+            ),
+            format!(
+              "Color: [{:.2}, {:.2}, {:.2}, {:.2}]",
+              color[0], color[1], color[2], color[3]
+            ),
+          );
+        });
+      }));
       scene.add(e);
     }
 
     // 3 cubes of the same color (gold)
+    let gold = [1.0f32, 0.75, 0.0, 1.0];
     for i in 0..3usize {
-      let mut e = Entity::new(&format!("CubeSame_{i}"));
-      e.add_component(Transform::from_translation(Vec3::new((i as f32 - 1.0) * 3.0, 1.5, 0.0)));
+      let name = format!("CubeSame_{i}");
+      let mut e = Entity::new(&name);
+      e.add_component(Transform::from_translation(Vec3::new(
+        (i as f32 - 1.0) * 3.0,
+        1.5,
+        0.0,
+      )));
       e.add_component(Mesh::default_cube(device));
-      e.add_component(Material::with_color([1.0, 0.75, 0.0, 1.0]));
+      e.add_component(Material::with_color(gold));
+      e.add_component(DebugUI::new(move |ctx| {
+        egui::Window::new(format!("CubeSame_{i}")).show(ctx, |ui| {
+          ui.colored_label(
+            egui::Color32::from_rgb(
+              (gold[0] * 255.0) as u8,
+              (gold[1] * 255.0) as u8,
+              (gold[2] * 255.0) as u8,
+            ),
+            format!(
+              "Color: [{:.2}, {:.2}, {:.2}, {:.2}]",
+              gold[0], gold[1], gold[2], gold[3]
+            ),
+          );
+        });
+      }));
       scene.add(e);
     }
 

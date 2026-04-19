@@ -28,11 +28,17 @@ impl Entity {
   }
 
   pub fn get_component<C: 'static>(&self) -> Option<&C> {
-    self.components.iter().find_map(|c| c.as_any().downcast_ref::<C>())
+    self
+      .components
+      .iter()
+      .find_map(|c| c.as_any().downcast_ref::<C>())
   }
 
   pub fn get_component_mut<C: 'static>(&mut self) -> Option<&mut C> {
-    self.components.iter_mut().find_map(|c| c.as_any_mut().downcast_mut::<C>())
+    self
+      .components
+      .iter_mut()
+      .find_map(|c| c.as_any_mut().downcast_mut::<C>())
   }
 
   pub fn components(&self) -> &[Box<dyn Component>] {

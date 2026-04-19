@@ -11,7 +11,9 @@ pub struct Scene {
 
 impl Scene {
   pub fn new() -> Self {
-    Self { entities: Vec::new() }
+    Self {
+      entities: Vec::new(),
+    }
   }
 
   pub fn add(&mut self, entity: Entity) {

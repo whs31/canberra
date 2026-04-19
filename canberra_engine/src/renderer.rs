@@ -190,7 +190,9 @@ impl Renderer {
     queue.write_buffer(
       &self.camera_buffer,
       0,
-      bytemuck::cast_slice(&[CameraUniform { view_proj: view_proj.to_cols_array_2d() }]),
+      bytemuck::cast_slice(&[CameraUniform {
+        view_proj: view_proj.to_cols_array_2d(),
+      }]),
     );
 
     let renderables: Vec<_> = scene
@@ -225,7 +227,12 @@ impl Renderer {
         resolve_target: None,
         depth_slice: None,
         ops: wgpu::Operations {
-          load: wgpu::LoadOp::Clear(wgpu::Color { r: 0.1, g: 0.2, b: 0.3, a: 1.0 }),
+          load: wgpu::LoadOp::Clear(wgpu::Color {
+            r: 0.1,
+            g: 0.2,
+            b: 0.3,
+            a: 1.0,
+          }),
           store: wgpu::StoreOp::Store,
         },
       })],
@@ -262,7 +269,11 @@ impl Renderer {
   ) -> (wgpu::Texture, wgpu::TextureView) {
     let texture = device.create_texture(&wgpu::TextureDescriptor {
       label: Some("depth_texture"),
-      size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+      size: wgpu::Extent3d {
+        width,
+        height,
+        depth_or_array_layers: 1,
+      },
       mip_level_count: 1,
       sample_count: 1,
       dimension: wgpu::TextureDimension::D2,
