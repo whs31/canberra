@@ -3,18 +3,22 @@ use std::sync::Arc;
 use crate::{Error, Result, Scene, components::DebugUI, editor::Inspector, renderer::Renderer};
 
 pub struct ApplicationState {
-  surface: wgpu::Surface<'static>,
-  pub device: wgpu::Device,
-  queue: wgpu::Queue,
-  config: wgpu::SurfaceConfiguration,
-  is_surface_configured: bool,
-  window: Arc<winit::window::Window>,
-  renderer: Renderer,
-  pub scene: Scene,
+  // Drop order matters: fields are dropped top-to-bottom.
+  // egui_state holds Wayland display refs → must drop before window.
+  // scene/renderer hold GPU resources → drop before device/surface.
+  // surface holds an internal Arc<Window> → drop before window.
+  inspector: Inspector,
   egui_ctx: egui::Context,
   egui_state: egui_winit::State,
   egui_renderer: egui_wgpu::Renderer,
-  inspector: Inspector,
+  pub scene: Scene,
+  renderer: Renderer,
+  surface: wgpu::Surface<'static>,
+  queue: wgpu::Queue,
+  pub device: wgpu::Device,
+  config: wgpu::SurfaceConfiguration,
+  is_surface_configured: bool,
+  window: Arc<winit::window::Window>,
 }
 
 impl ApplicationState {
