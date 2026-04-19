@@ -1,19 +1,23 @@
 use std::sync::Arc;
 
-use crate::{Error, Result};
+use crate::{Error, Result, Scene, renderer::Renderer};
 
-#[derive(Debug)]
 pub struct ApplicationState {
   surface: wgpu::Surface<'static>,
-  device: wgpu::Device,
+  pub device: wgpu::Device,
   queue: wgpu::Queue,
   config: wgpu::SurfaceConfiguration,
   is_surface_configured: bool,
   window: Arc<winit::window::Window>,
+  renderer: Renderer,
+  pub scene: Scene,
 }
 
 impl ApplicationState {
-  pub async fn new(window: Arc<winit::window::Window>) -> Result<Self> {
+  pub async fn new(
+    window: Arc<winit::window::Window>,
+    scene_builder: Box<dyn FnOnce(&wgpu::Device) -> Scene>,
+  ) -> Result<Self> {
     let size = window.inner_size();
 
     let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
@@ -42,6 +46,7 @@ impl ApplicationState {
         trace: wgpu::Trace::Off,
       })
       .await?;
+
     let surface_caps = surface.get_capabilities(&adapter);
     let surface_format = surface_caps
       .formats
@@ -60,6 +65,9 @@ impl ApplicationState {
       desired_maximum_frame_latency: 2,
     };
 
+    let scene = scene_builder(&device);
+    let renderer = Renderer::new(&device, surface_format, size.width, size.height);
+
     Ok(Self {
       surface,
       device,
@@ -67,6 +75,8 @@ impl ApplicationState {
       config,
       is_surface_configured: false,
       window,
+      renderer,
+      scene,
     })
   }
 
@@ -75,6 +85,7 @@ impl ApplicationState {
       self.config.width = width;
       self.config.height = height;
       self.surface.configure(&self.device, &self.config);
+      self.renderer.resize(&self.device, width, height);
       self.is_surface_configured = true;
     }
   }
@@ -87,17 +98,14 @@ impl ApplicationState {
     }
 
     let output = match self.surface.get_current_texture() {
-      wgpu::CurrentSurfaceTexture::Success(surface_texture) => surface_texture,
-      wgpu::CurrentSurfaceTexture::Suboptimal(surface_texture) => {
+      wgpu::CurrentSurfaceTexture::Success(t) => t,
+      wgpu::CurrentSurfaceTexture::Suboptimal(t) => {
         self.surface.configure(&self.device, &self.config);
-        surface_texture
+        t
       }
       wgpu::CurrentSurfaceTexture::Timeout
       | wgpu::CurrentSurfaceTexture::Occluded
-      | wgpu::CurrentSurfaceTexture::Validation => {
-        // Skip this frame
-        return Ok(());
-      }
+      | wgpu::CurrentSurfaceTexture::Validation => return Ok(()),
       wgpu::CurrentSurfaceTexture::Outdated => {
         self.surface.configure(&self.device, &self.config);
         return Ok(());
@@ -105,42 +113,16 @@ impl ApplicationState {
       wgpu::CurrentSurfaceTexture::Lost => return Err(Error::LostDevice),
     };
 
-    let view = output
-      .texture
-      .create_view(&wgpu::TextureViewDescriptor::default());
-    let mut encoder = self
-      .device
-      .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-        label: Some("Render Encoder"),
-      });
-    {
-      let _render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-        label: Some("Render Pass"),
-        color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-          view: &view,
-          resolve_target: None,
-          depth_slice: None,
-          ops: wgpu::Operations {
-            load: wgpu::LoadOp::Clear(wgpu::Color {
-              r: 0.1,
-              g: 0.2,
-              b: 0.3,
-              a: 1.0,
-            }),
-            store: wgpu::StoreOp::Store,
-          },
-        })],
-        depth_stencil_attachment: None,
-        occlusion_query_set: None,
-        timestamp_writes: None,
-        multiview_mask: None,
-      });
-    }
+    let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
+    let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+      label: Some("Render Encoder"),
+    });
 
-    // submit will accept anything that implements IntoIter
+    let aspect = self.config.width as f32 / self.config.height as f32;
+    self.renderer.render(&self.scene, &self.queue, &view, &mut encoder, aspect);
+
     self.queue.submit(std::iter::once(encoder.finish()));
     output.present();
-
     Ok(())
   }
 
@@ -150,13 +132,10 @@ impl ApplicationState {
     code: winit::keyboard::KeyCode,
     is_pressed: bool,
   ) {
-    match (code, is_pressed) {
-      (winit::keyboard::KeyCode::Escape, true) => event_loop.exit(),
-      _ => {}
+    if let (winit::keyboard::KeyCode::Escape, true) = (code, is_pressed) {
+      event_loop.exit();
     }
   }
 
-  pub(crate) fn update(&mut self) {
-    // remove `todo!()`
-  }
+  pub(crate) fn update(&mut self) {}
 }

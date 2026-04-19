@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use wgpu::util::DeviceExt;
 
 use crate::{Component, Vertex};
@@ -12,6 +14,14 @@ pub struct Mesh {
 impl Component for Mesh {
   fn name(&self) -> &'static str {
     "Mesh"
+  }
+
+  fn as_any(&self) -> &dyn Any {
+    self
+  }
+
+  fn as_any_mut(&mut self) -> &mut dyn Any {
+    self
   }
 }
 
@@ -39,14 +49,14 @@ impl Mesh {
 
 #[rustfmt::skip]
 const CUBE_VERTICES: &[Vertex] = &[
-  Vertex { position: [-1.0, -1.0, -1.0], },
-  Vertex { position: [1.0, -1.0, -1.0], },
-  Vertex { position: [1.0, -1.0, 1.0], },
-  Vertex { position: [-1.0, -1.0, 1.0], },
-  Vertex { position: [-1.0, 1.0, -1.0], },
-  Vertex { position: [1.0, 1.0, -1.0], },
-  Vertex { position: [1.0, 1.0, 1.0], },
-  Vertex { position: [-1.0, 1.0, 1.0], },
+  Vertex { position: [-1.0, -1.0, -1.0] },
+  Vertex { position: [ 1.0, -1.0, -1.0] },
+  Vertex { position: [ 1.0, -1.0,  1.0] },
+  Vertex { position: [-1.0, -1.0,  1.0] },
+  Vertex { position: [-1.0,  1.0, -1.0] },
+  Vertex { position: [ 1.0,  1.0, -1.0] },
+  Vertex { position: [ 1.0,  1.0,  1.0] },
+  Vertex { position: [-1.0,  1.0,  1.0] },
 ];
 
 #[rustfmt::skip]

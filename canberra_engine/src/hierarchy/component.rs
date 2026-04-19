@@ -1,11 +1,7 @@
-use crate::Entity;
+use std::any::Any;
 
-pub trait Component {
+pub trait Component: Any + std::fmt::Debug {
   fn name(&self) -> &'static str;
-}
-
-impl std::fmt::Debug for dyn Component {
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    f.debug_struct(self.name()).finish()
-  }
+  fn as_any(&self) -> &dyn Any;
+  fn as_any_mut(&mut self) -> &mut dyn Any;
 }

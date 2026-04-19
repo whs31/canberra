@@ -12,3 +12,4 @@ canberra_engine = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+glam = { workspace = true }

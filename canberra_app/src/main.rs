@@ -2,8 +2,44 @@ mod error;
 
 pub use self::error::{Error, Result};
 
+use canberra_engine::{Application, Entity, Scene, components::{Camera, Material, Mesh, Transform}};
+use glam::Vec3;
+
 fn try_main() -> Result<()> {
-  canberra_engine::Application::run()?;
+  Application::run(|device| {
+    let mut scene = Scene::new();
+
+    // Camera
+    let mut cam = Entity::new("Camera");
+    cam.add_component(Transform::from_translation(Vec3::new(0.0, 2.0, 10.0)));
+    cam.add_component(Camera::new(60_f32.to_radians(), 1.0, 0.1, 100.0));
+    scene.add(cam);
+
+    // 3 cubes of different colors
+    let unique_colors: [[f32; 4]; 3] = [
+      [0.9, 0.2, 0.2, 1.0],
+      [0.2, 0.9, 0.2, 1.0],
+      [0.2, 0.4, 0.9, 1.0],
+    ];
+    for (i, &color) in unique_colors.iter().enumerate() {
+      let mut e = Entity::new(&format!("Cube_{i}"));
+      e.add_component(Transform::from_translation(Vec3::new((i as f32 - 1.0) * 3.0, -1.5, 0.0)));
+      e.add_component(Mesh::default_cube(device));
+      e.add_component(Material::with_color(color));
+      scene.add(e);
+    }
+
+    // 3 cubes of the same color (gold)
+    for i in 0..3usize {
+      let mut e = Entity::new(&format!("CubeSame_{i}"));
+      e.add_component(Transform::from_translation(Vec3::new((i as f32 - 1.0) * 3.0, 1.5, 0.0)));
+      e.add_component(Mesh::default_cube(device));
+      e.add_component(Material::with_color([1.0, 0.75, 0.0, 1.0]));
+      scene.add(e);
+    }
+
+    scene
+  })?;
   Ok(())
 }
 

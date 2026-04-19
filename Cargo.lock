@@ -299,6 +299,7 @@ name = "canberra_bin"
 version = "0.1.0"
 dependencies = [
  "canberra_engine",
+ "glam",
  "thiserror 2.0.18",
  "tracing",
  "tracing-subscriber",

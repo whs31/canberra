@@ -2,21 +2,20 @@ mod state;
 use std::sync::Arc;
 
 pub use self::state::ApplicationState;
-use crate::Result;
+use crate::{Result, Scene};
 
-#[derive(Debug)]
 pub struct Application {
   pub state: Option<ApplicationState>,
+  scene_builder: Option<Box<dyn FnOnce(&wgpu::Device) -> Scene>>,
 }
 
 impl Application {
-  pub fn new() -> Self {
-    Self { state: None }
-  }
-
-  pub fn run() -> Result<()> {
+  pub fn run<F: FnOnce(&wgpu::Device) -> Scene + 'static>(scene_builder: F) -> Result<()> {
     let event_loop = winit::event_loop::EventLoop::with_user_event().build()?;
-    let mut app = Self::new();
+    let mut app = Self {
+      state: None,
+      scene_builder: Some(Box::new(scene_builder)),
+    };
     event_loop.run_app(&mut app)?;
     Ok(())
   }
@@ -24,11 +23,10 @@ impl Application {
 
 impl winit::application::ApplicationHandler for Application {
   fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
-    #[allow(unused_mut)]
-    let mut window_attributes = winit::window::Window::default_attributes();
-
+    let window_attributes = winit::window::Window::default_attributes();
     let window = Arc::new(event_loop.create_window(window_attributes).unwrap());
-    self.state = Some(pollster::block_on(ApplicationState::new(window)).unwrap());
+    let builder = self.scene_builder.take().unwrap();
+    self.state = Some(pollster::block_on(ApplicationState::new(window, builder)).unwrap());
   }
 
   fn window_event(
@@ -38,7 +36,7 @@ impl winit::application::ApplicationHandler for Application {
     event: winit::event::WindowEvent,
   ) {
     let state = match &mut self.state {
-      Some(canvas) => canvas,
+      Some(s) => s,
       None => return,
     };
 
