@@ -33,22 +33,6 @@ fn try_main() -> Result<()> {
       )));
       e.add_component(Mesh::default_cube(device));
       e.add_component(Material::with_color(color));
-      let label = name.to_string();
-      e.add_component(DebugUI::new(move |ctx| {
-        egui::Window::new(&label).show(ctx, |ui| {
-          ui.colored_label(
-            egui::Color32::from_rgb(
-              (color[0] * 255.0) as u8,
-              (color[1] * 255.0) as u8,
-              (color[2] * 255.0) as u8,
-            ),
-            format!(
-              "Color: [{:.2}, {:.2}, {:.2}, {:.2}]",
-              color[0], color[1], color[2], color[3]
-            ),
-          );
-        });
-      }));
       scene.add(e);
     }
 
@@ -64,21 +48,6 @@ fn try_main() -> Result<()> {
       )));
       e.add_component(Mesh::default_cube(device));
       e.add_component(Material::with_color(gold));
-      e.add_component(DebugUI::new(move |ctx| {
-        egui::Window::new(format!("CubeSame_{i}")).show(ctx, |ui| {
-          ui.colored_label(
-            egui::Color32::from_rgb(
-              (gold[0] * 255.0) as u8,
-              (gold[1] * 255.0) as u8,
-              (gold[2] * 255.0) as u8,
-            ),
-            format!(
-              "Color: [{:.2}, {:.2}, {:.2}, {:.2}]",
-              gold[0], gold[1], gold[2], gold[3]
-            ),
-          );
-        });
-      }));
       scene.add(e);
     }
 

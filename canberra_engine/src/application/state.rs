@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{Error, Result, Scene, components::DebugUI, renderer::Renderer};
+use crate::{Error, Result, Scene, components::DebugUI, editor::Inspector, renderer::Renderer};
 
 pub struct ApplicationState {
   surface: wgpu::Surface<'static>,
@@ -14,6 +14,7 @@ pub struct ApplicationState {
   egui_ctx: egui::Context,
   egui_state: egui_winit::State,
   egui_renderer: egui_wgpu::Renderer,
+  inspector: Inspector,
 }
 
 impl ApplicationState {
@@ -69,6 +70,7 @@ impl ApplicationState {
     };
 
     let scene = scene_builder(&device);
+    let inspector = Inspector::new();
     let renderer = Renderer::new(&device, surface_format, size.width, size.height);
 
     let egui_ctx = egui::Context::default();
@@ -101,6 +103,7 @@ impl ApplicationState {
       egui_ctx,
       egui_state,
       egui_renderer,
+      inspector,
     })
   }
 
@@ -162,6 +165,7 @@ impl ApplicationState {
     let raw_input = self.egui_state.take_egui_input(&self.window);
     #[allow(deprecated)]
     let full_output = self.egui_ctx.run(raw_input, |ctx| {
+      self.inspector.draw(&self.scene, ctx);
       for entity in &self.scene.entities {
         if let Some(ui) = entity.get_component::<DebugUI>() {
           ui.draw(ctx);

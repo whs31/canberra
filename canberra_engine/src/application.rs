@@ -11,7 +11,7 @@ pub struct Application {
 
 impl Application {
   pub fn run<F: FnOnce(&wgpu::Device) -> Scene + 'static>(scene_builder: F) -> Result<()> {
-    let event_loop = winit::event_loop::EventLoop::with_user_event().build()?;
+    let event_loop = crate::window::event_loop()?;
     let mut app = Self {
       state: None,
       scene_builder: Some(Box::new(scene_builder)),
