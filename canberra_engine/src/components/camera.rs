@@ -39,4 +39,18 @@ impl Component for Camera {
   fn as_any_mut(&mut self) -> &mut dyn Any {
     self
   }
+
+  fn inspect(&self, ui: &mut egui::Ui) {
+    egui::Grid::new("camera").num_columns(2).spacing([8.0, 4.0]).show(ui, |ui| {
+      ui.label("FOV");
+      ui.label(format!("{:.1}°", self.fov_y.to_degrees()));
+      ui.end_row();
+      ui.label("Near");
+      ui.label(format!("{:.4}", self.near));
+      ui.end_row();
+      ui.label("Far");
+      ui.label(format!("{:.1}", self.far));
+      ui.end_row();
+    });
+  }
 }

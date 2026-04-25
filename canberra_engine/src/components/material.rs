@@ -33,4 +33,19 @@ impl Component for Material {
   fn as_any_mut(&mut self) -> &mut dyn Any {
     self
   }
+
+  fn inspect(&self, ui: &mut egui::Ui) {
+    let [r, g, b, a] = self.color;
+    let swatch = egui::Color32::from_rgba_unmultiplied(
+      (r * 255.0) as u8,
+      (g * 255.0) as u8,
+      (b * 255.0) as u8,
+      (a * 255.0) as u8,
+    );
+    ui.horizontal(|ui| {
+      let (rect, _) = ui.allocate_exact_size(egui::vec2(32.0, 16.0), egui::Sense::hover());
+      ui.painter().rect_filled(rect, 3.0, swatch);
+      ui.label(format!("({r:.2}, {g:.2}, {b:.2}, {a:.2})"));
+    });
+  }
 }

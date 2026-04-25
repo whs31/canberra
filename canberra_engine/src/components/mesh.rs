@@ -20,6 +20,20 @@ impl Component for Mesh {
   fn as_any_mut(&mut self) -> &mut dyn Any {
     self
   }
+
+  fn inspect(&self, ui: &mut egui::Ui) {
+    egui::Grid::new("mesh").num_columns(2).spacing([8.0, 4.0]).show(ui, |ui| {
+      ui.label("Vertices");
+      ui.label(self.vertices.len().to_string());
+      ui.end_row();
+      ui.label("Indices");
+      ui.label(self.indices.len().to_string());
+      ui.end_row();
+      ui.label("Triangles");
+      ui.label((self.indices.len() / 3).to_string());
+      ui.end_row();
+    });
+  }
 }
 
 impl Mesh {

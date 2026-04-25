@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{Error, Result, Scene, editor::Hierarchy, renderer::Renderer};
+use crate::{Error, Result, Scene, editor::{Hierarchy, Inspector}, renderer::Renderer};
 
 pub struct ApplicationState {
   // Drop order matters: fields are dropped top-to-bottom.
@@ -8,6 +8,7 @@ pub struct ApplicationState {
   // scene/renderer hold GPU resources → drop before device/surface.
   // surface holds an internal Arc<Window> → drop before window.
   hierarchy: Hierarchy,
+  inspector: Inspector,
   egui_ctx: egui::Context,
   egui_state: egui_winit::State,
   egui_renderer: egui_wgpu::Renderer,
@@ -75,6 +76,7 @@ impl ApplicationState {
 
     let scene = scene_builder();
     let hierarchy = Hierarchy::new();
+    let inspector = Inspector::new();
     let renderer = Renderer::new(&device, surface_format, size.width, size.height);
 
     let egui_ctx = egui::Context::default();
@@ -108,6 +110,7 @@ impl ApplicationState {
       egui_state,
       egui_renderer,
       hierarchy,
+      inspector,
     })
   }
 
@@ -174,6 +177,7 @@ impl ApplicationState {
     let raw_input = self.egui_state.take_egui_input(&self.window);
     let full_output = self.egui_ctx.run_ui(raw_input, |ctx| {
       self.hierarchy.draw(&self.scene, ctx);
+      self.inspector.draw(self.hierarchy.selected, &self.scene, ctx);
     });
     self
       .egui_state
