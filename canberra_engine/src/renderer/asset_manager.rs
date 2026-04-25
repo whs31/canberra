@@ -1,10 +1,13 @@
-use std::collections::hash_map::{DefaultHasher, Entry};
-use std::collections::HashMap;
-use std::hash::{Hash, Hasher};
-
-use crate::components::Mesh;
+use std::{
+  collections::{
+    HashMap,
+    hash_map::{DefaultHasher, Entry},
+  },
+  hash::{Hash, Hasher},
+};
 
 use super::GpuMesh;
+use crate::components::Mesh;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MeshHandle(u64);
@@ -30,7 +33,11 @@ impl AssetManager {
   }
 
   /// Returns the handle for `mesh`, uploading it to the GPU exactly once.
-  pub(crate) fn get_or_upload(&mut self, device: &wgpu::Device, mesh: &Mesh) -> (MeshHandle, &GpuMesh) {
+  pub(crate) fn get_or_upload(
+    &mut self,
+    device: &wgpu::Device,
+    mesh: &Mesh,
+  ) -> (MeshHandle, &GpuMesh) {
     let handle = MeshHandle::from_mesh(mesh);
     let gpu_mesh = match self.meshes.entry(handle) {
       Entry::Occupied(e) => e.into_mut(),
