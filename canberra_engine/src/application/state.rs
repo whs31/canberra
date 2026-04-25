@@ -1,12 +1,13 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Instant};
 
-use crate::{Error, Result, Scene, editor::{Hierarchy, Inspector}, renderer::Renderer};
+use crate::{Error, Result, Scene, editor::{Hierarchy, Inspector}, renderer::{Renderer, ShaderRegistry}};
 
 pub struct ApplicationState {
   // Drop order matters: fields are dropped top-to-bottom.
   // egui_state holds Wayland display refs → must drop before window.
   // scene/renderer hold GPU resources → drop before device/surface.
   // surface holds an internal Arc<Window> → drop before window.
+  start_time: Instant,
   hierarchy: Hierarchy,
   inspector: Inspector,
   egui_ctx: egui::Context,
@@ -25,7 +26,7 @@ pub struct ApplicationState {
 impl ApplicationState {
   pub async fn new(
     window: Arc<winit::window::Window>,
-    scene_builder: Box<dyn FnOnce() -> Scene>,
+    scene_builder: Box<dyn FnOnce(&mut ShaderRegistry) -> Scene>,
   ) -> Result<Self> {
     let size = window.inner_size();
 
@@ -74,10 +75,11 @@ impl ApplicationState {
       desired_maximum_frame_latency: 2,
     };
 
-    let scene = scene_builder();
+    let mut shader_registry = ShaderRegistry::new();
+    let scene = scene_builder(&mut shader_registry);
     let hierarchy = Hierarchy::new();
     let inspector = Inspector::new();
-    let renderer = Renderer::new(&device, surface_format, size.width, size.height);
+    let renderer = Renderer::new(&device, surface_format, size.width, size.height, shader_registry);
 
     let egui_ctx = egui::Context::default();
     let egui_state = egui_winit::State::new(
@@ -98,6 +100,7 @@ impl ApplicationState {
     );
 
     Ok(Self {
+      start_time: Instant::now(),
       surface,
       device,
       queue,
@@ -164,6 +167,7 @@ impl ApplicationState {
       });
 
     let aspect = self.config.width as f32 / self.config.height as f32;
+    let time = self.start_time.elapsed().as_secs_f32();
     self.renderer.render(
       &self.device,
       &self.scene,
@@ -171,6 +175,7 @@ impl ApplicationState {
       &view,
       &mut encoder,
       aspect,
+      time,
     );
 
     // --- egui ---

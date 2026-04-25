@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use glam::Mat4;
 
 use crate::{
@@ -9,8 +11,10 @@ mod asset_manager;
 mod camera_uniform;
 mod gpu_mesh;
 mod object_uniform_data;
+mod shader_registry;
 
 pub use self::asset_manager::{AssetManager, MeshHandle};
+pub use self::shader_registry::{ShaderHandle, ShaderRegistry};
 pub(crate) use self::{
   camera_uniform::CameraUniform, gpu_mesh::GpuMesh, object_uniform_data::ObjectUniformData,
 };
@@ -22,6 +26,7 @@ const MAX_OBJECTS: u64 = 256;
 pub struct Renderer {
   pipeline_lit: wgpu::RenderPipeline,
   pipeline_unlit: wgpu::RenderPipeline,
+  custom_pipelines: HashMap<ShaderHandle, wgpu::RenderPipeline>,
   camera_buffer: wgpu::Buffer,
   camera_bind_group: wgpu::BindGroup,
   object_buffer: wgpu::Buffer,
@@ -37,6 +42,7 @@ impl Renderer {
     surface_format: wgpu::TextureFormat,
     width: u32,
     height: u32,
+    registry: ShaderRegistry,
   ) -> Self {
     let shader_lit = device.create_shader_module(wgpu::include_wgsl!("shader_lit.wgsl"));
     let shader_unlit = device.create_shader_module(wgpu::include_wgsl!("shader_unlit.wgsl"));
@@ -114,11 +120,24 @@ impl Renderer {
     let pipeline_lit = make_pipeline(device, &shader_lit, &pipeline_layout, surface_format);
     let pipeline_unlit = make_pipeline(device, &shader_unlit, &pipeline_layout, surface_format);
 
+    let custom_pipelines = registry
+      .sources
+      .into_iter()
+      .map(|(handle, wgsl)| {
+        let module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+          label: None,
+          source: wgpu::ShaderSource::Wgsl(wgsl.into()),
+        });
+        (handle, make_pipeline(device, &module, &pipeline_layout, surface_format))
+      })
+      .collect();
+
     let (depth_texture, depth_view) = Self::make_depth_texture(device, width.max(1), height.max(1));
 
     Self {
       pipeline_lit,
       pipeline_unlit,
+      custom_pipelines,
       camera_buffer,
       camera_bind_group,
       object_buffer,
@@ -143,14 +162,13 @@ impl Renderer {
     view: &wgpu::TextureView,
     encoder: &mut wgpu::CommandEncoder,
     aspect: f32,
+    time: f32,
   ) {
     let view_proj = scene.camera_view_proj(aspect);
     queue.write_buffer(
       &self.camera_buffer,
       0,
-      bytemuck::cast_slice(&[CameraUniform {
-        view_proj: view_proj.to_cols_array_2d(),
-      }]),
+      bytemuck::cast_slice(&[CameraUniform::new(view_proj.to_cols_array_2d(), time)]),
     );
 
     let mut renderables: Vec<(Mat4, &Entity)> = Vec::new();
@@ -210,10 +228,15 @@ impl Renderer {
         .get_component::<Material>()
         .map(|m| m.shader)
         .unwrap_or_default();
-      pass.set_pipeline(match shader {
+      let pipeline = match shader {
         ShaderKind::DefaultLit => &self.pipeline_lit,
         ShaderKind::DefaultUnlit => &self.pipeline_unlit,
-      });
+        ShaderKind::Custom(handle) => self
+          .custom_pipelines
+          .get(&handle)
+          .unwrap_or(&self.pipeline_lit),
+      };
+      pass.set_pipeline(pipeline);
       pass.set_bind_group(0, &self.camera_bind_group, &[]);
 
       let mesh = entity.get_component::<Mesh>().unwrap();

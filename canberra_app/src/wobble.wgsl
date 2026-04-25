@@ -24,11 +24,13 @@ struct VertOut {
 
 @vertex
 fn vs_main(in: VertIn) -> VertOut {
+  var pos = in.position;
+  pos.y += sin(pos.x * 2.5 + camera.time * 3.0) * 0.1;
+  pos.x += sin(pos.y * 2.0 + camera.time * 2.3) * 0.05;
+
   var out: VertOut;
-  out.clip_pos = camera.view_proj * object.model * vec4<f32>(in.position, 1.0);
+  out.clip_pos = camera.view_proj * object.model * vec4<f32>(pos, 1.0);
   out.color    = object.color;
-  // Upper-3x3 of the model matrix. Correct for uniform-scale transforms;
-  // non-uniform scale would require the inverse-transpose normal matrix.
   let m = mat3x3<f32>(
     object.model[0].xyz,
     object.model[1].xyz,

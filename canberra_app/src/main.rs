@@ -2,14 +2,15 @@ mod error;
 
 use canberra_engine::{
   Application, Entity, Scene,
-  components::{Camera, Material, Mesh, Transform},
+  components::{Camera, Material, Mesh, ShaderKind, Transform},
 };
 use glam::Vec3;
 
 pub use self::error::{Error, Result};
 
 fn try_main() -> Result<()> {
-  Application::run(|| {
+  Application::run(|shaders| {
+    let wobble_shader = shaders.register(include_str!("wobble.wgsl"));
     let mut scene = Scene::new();
 
     // Camera
@@ -55,6 +56,16 @@ fn try_main() -> Result<()> {
       same_group.add_child(e);
     }
     scene.add(same_group);
+
+    // Wobbly cube (center, front)
+    let mut wobbly = Entity::new("WobblyCube");
+    wobbly.add_component(Transform::from_translation(Vec3::new(0.0, 4.0, 0.0)));
+    wobbly.add_component(Mesh::cube());
+    wobbly.add_component(Material {
+      color: [0.9, 0.5, 0.1, 1.0],
+      shader: ShaderKind::Custom(wobble_shader),
+    });
+    scene.add(wobbly);
 
     scene
   })?;

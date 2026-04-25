@@ -12,7 +12,7 @@ pub use self::{
   application::{Application, ApplicationState},
   error::{Error, Result},
   hierarchy::{Component, Entity},
-  renderer::{AssetManager, MeshHandle},
+  renderer::{AssetManager, MeshHandle, ShaderHandle, ShaderRegistry},
   scene::Scene,
   types::Vertex,
 };
