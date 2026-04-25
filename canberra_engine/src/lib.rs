@@ -13,6 +13,7 @@ pub use self::{
   components::DebugUI,
   error::{Error, Result},
   hierarchy::{Component, Entity},
+  renderer::{AssetManager, MeshHandle},
   scene::Scene,
   types::Vertex,
 };

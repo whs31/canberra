@@ -1,16 +1,14 @@
-use std::collections::HashMap;
-
-use uuid::Uuid;
-
 use crate::{
   Scene, Vertex,
   components::{Material, Mesh, Transform},
 };
 
+mod asset_manager;
 mod camera_uniform;
 mod gpu_mesh;
 mod object_uniform_data;
 
+pub use self::asset_manager::{AssetManager, MeshHandle};
 pub(crate) use self::{
   camera_uniform::CameraUniform, gpu_mesh::GpuMesh, object_uniform_data::ObjectUniformData,
 };
@@ -27,7 +25,7 @@ pub struct Renderer {
   object_bind_group: wgpu::BindGroup,
   depth_texture: wgpu::Texture,
   depth_view: wgpu::TextureView,
-  mesh_cache: HashMap<Uuid, GpuMesh>,
+  asset_manager: AssetManager,
 }
 
 impl Renderer {
@@ -169,7 +167,7 @@ impl Renderer {
       object_bind_group,
       depth_texture,
       depth_view,
-      mesh_cache: HashMap::with_capacity(1024),
+      asset_manager: AssetManager::new(),
     }
   }
 
@@ -256,11 +254,7 @@ impl Renderer {
 
     for (i, entity) in renderables.iter().enumerate() {
       let mesh = entity.get_component::<Mesh>().unwrap();
-      let entity_id = entity.id();
-      let gpu_mesh = self
-        .mesh_cache
-        .entry(entity_id)
-        .or_insert_with(|| GpuMesh::upload(device, mesh));
+      let (_, gpu_mesh) = self.asset_manager.get_or_upload(device, mesh);
 
       let dynamic_offset = (i as u64 * OBJECT_STRIDE) as u32;
       pass.set_bind_group(1, &self.object_bind_group, &[dynamic_offset]);
