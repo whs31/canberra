@@ -8,7 +8,11 @@ pub(crate) struct CameraUniform {
 
 impl CameraUniform {
   pub(crate) fn new(view_proj: [[f32; 4]; 4], time: f32) -> Self {
-    Self { view_proj, time, _pad: [0.0; 3] }
+    Self {
+      view_proj,
+      time,
+      _pad: [0.0; 3],
+    }
   }
 
   pub(crate) const fn size() -> u64 {

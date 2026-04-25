@@ -13,8 +13,10 @@ mod gpu_mesh;
 mod object_uniform_data;
 mod shader_registry;
 
-pub use self::asset_manager::{AssetManager, MeshHandle};
-pub use self::shader_registry::{ShaderHandle, ShaderRegistry};
+pub use self::{
+  asset_manager::{AssetManager, MeshHandle},
+  shader_registry::{ShaderHandle, ShaderRegistry},
+};
 pub(crate) use self::{
   camera_uniform::CameraUniform, gpu_mesh::GpuMesh, object_uniform_data::ObjectUniformData,
 };
@@ -128,7 +130,10 @@ impl Renderer {
           label: None,
           source: wgpu::ShaderSource::Wgsl(wgsl.into()),
         });
-        (handle, make_pipeline(device, &module, &pipeline_layout, surface_format))
+        (
+          handle,
+          make_pipeline(device, &module, &pipeline_layout, surface_format),
+        )
       })
       .collect();
 
@@ -336,7 +341,11 @@ fn make_pipeline(
   })
 }
 
-fn collect_renderables<'a>(entity: &'a Entity, parent_world: Mat4, out: &mut Vec<(Mat4, &'a Entity)>) {
+fn collect_renderables<'a>(
+  entity: &'a Entity,
+  parent_world: Mat4,
+  out: &mut Vec<(Mat4, &'a Entity)>,
+) {
   let local = entity
     .get_component::<Transform>()
     .map(|t| t.matrix())

@@ -1,6 +1,10 @@
 use std::{sync::Arc, time::Instant};
 
-use crate::{Error, Result, Scene, editor::{Hierarchy, Inspector}, renderer::{Renderer, ShaderRegistry}};
+use crate::{
+  Error, Result, Scene,
+  editor::{Hierarchy, Inspector},
+  renderer::{Renderer, ShaderRegistry},
+};
 
 pub struct ApplicationState {
   // Drop order matters: fields are dropped top-to-bottom.
@@ -79,7 +83,13 @@ impl ApplicationState {
     let scene = scene_builder(&mut shader_registry);
     let hierarchy = Hierarchy::new();
     let inspector = Inspector::new();
-    let renderer = Renderer::new(&device, surface_format, size.width, size.height, shader_registry);
+    let renderer = Renderer::new(
+      &device,
+      surface_format,
+      size.width,
+      size.height,
+      shader_registry,
+    );
 
     let egui_ctx = egui::Context::default();
     let egui_state = egui_winit::State::new(
@@ -182,7 +192,9 @@ impl ApplicationState {
     let raw_input = self.egui_state.take_egui_input(&self.window);
     let full_output = self.egui_ctx.run_ui(raw_input, |ctx| {
       self.hierarchy.draw(&self.scene, ctx);
-      self.inspector.draw(self.hierarchy.selected, &mut self.scene, ctx);
+      self
+        .inspector
+        .draw(self.hierarchy.selected, &mut self.scene, ctx);
     });
     self
       .egui_state
