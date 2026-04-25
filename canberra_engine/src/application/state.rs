@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
-use crate::{Error, Result, Scene, editor::Inspector, renderer::Renderer};
+use crate::{Error, Result, Scene, editor::Hierarchy, renderer::Renderer};
 
 pub struct ApplicationState {
   // Drop order matters: fields are dropped top-to-bottom.
   // egui_state holds Wayland display refs → must drop before window.
   // scene/renderer hold GPU resources → drop before device/surface.
   // surface holds an internal Arc<Window> → drop before window.
-  inspector: Inspector,
+  hierarchy: Hierarchy,
   egui_ctx: egui::Context,
   egui_state: egui_winit::State,
   egui_renderer: egui_wgpu::Renderer,
@@ -74,7 +74,7 @@ impl ApplicationState {
     };
 
     let scene = scene_builder();
-    let inspector = Inspector::new();
+    let hierarchy = Hierarchy::new();
     let renderer = Renderer::new(&device, surface_format, size.width, size.height);
 
     let egui_ctx = egui::Context::default();
@@ -107,7 +107,7 @@ impl ApplicationState {
       egui_ctx,
       egui_state,
       egui_renderer,
-      inspector,
+      hierarchy,
     })
   }
 
@@ -172,9 +172,8 @@ impl ApplicationState {
 
     // --- egui ---
     let raw_input = self.egui_state.take_egui_input(&self.window);
-    #[allow(deprecated)]
-    let full_output = self.egui_ctx.run(raw_input, |ctx| {
-      self.inspector.draw(&self.scene, ctx);
+    let full_output = self.egui_ctx.run_ui(raw_input, |ctx| {
+      self.hierarchy.draw(&self.scene, ctx);
     });
     self
       .egui_state

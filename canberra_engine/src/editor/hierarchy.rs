@@ -1,23 +1,19 @@
 use crate::Scene;
 
-pub struct Inspector {
-  selected: Option<usize>,
+pub struct Hierarchy {
+  pub selected: Option<usize>,
 }
 
-impl Inspector {
+impl Hierarchy {
   pub fn new() -> Self {
     Self { selected: None }
   }
 
   pub fn draw(&mut self, scene: &Scene, ctx: &egui::Context) {
-    #[allow(deprecated)]
-    egui::Panel::left("inspector")
+    egui::Window::new("Hierarchy")
       .resizable(true)
-      .min_size(200.0)
+      .min_size([200.0, 200.0])
       .show(ctx, |ui| {
-        ui.heading("Inspector");
-        ui.separator();
-
         ui.label(format!("{} entities", scene.entities.len()));
         ui.separator();
 
@@ -26,14 +22,6 @@ impl Inspector {
           let response = ui.selectable_label(is_selected, &entity.name);
           if response.clicked() {
             self.selected = if is_selected { None } else { Some(i) };
-          }
-
-          if is_selected {
-            ui.indent(i, |ui| {
-              entity.iter().for_each(|c| {
-                ui.label(format!("  \u{2022} {}", c.name()));
-              });
-            });
           }
         }
       });

@@ -1,3 +1,3 @@
-mod inspector;
+mod hierarchy;
 
-pub use self::inspector::Inspector;
+pub use self::hierarchy::Hierarchy;
