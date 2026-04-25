@@ -1,3 +1,4 @@
+mod shader;
 mod vertex;
 
-pub use self::vertex::Vertex;
+pub use self::{shader::Shader, vertex::Vertex};

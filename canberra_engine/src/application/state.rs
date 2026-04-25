@@ -3,7 +3,7 @@ use std::{sync::Arc, time::Instant};
 use crate::{
   Error, Result, Scene,
   editor::{Hierarchy, Inspector},
-  renderer::{Renderer, ShaderRegistry},
+  renderer::Renderer,
 };
 
 pub struct ApplicationState {
@@ -30,7 +30,7 @@ pub struct ApplicationState {
 impl ApplicationState {
   pub async fn new(
     window: Arc<winit::window::Window>,
-    scene_builder: Box<dyn FnOnce(&mut ShaderRegistry) -> Scene>,
+    scene_builder: Box<dyn FnOnce() -> Scene>,
   ) -> Result<Self> {
     let size = window.inner_size();
 
@@ -79,17 +79,10 @@ impl ApplicationState {
       desired_maximum_frame_latency: 2,
     };
 
-    let mut shader_registry = ShaderRegistry::new();
-    let scene = scene_builder(&mut shader_registry);
+    let scene = scene_builder();
     let hierarchy = Hierarchy::new();
     let inspector = Inspector::new();
-    let renderer = Renderer::new(
-      &device,
-      surface_format,
-      size.width,
-      size.height,
-      shader_registry,
-    );
+    let renderer = Renderer::new(&device, surface_format, size.width, size.height);
 
     let egui_ctx = egui::Context::default();
     let egui_state = egui_winit::State::new(
@@ -188,7 +181,6 @@ impl ApplicationState {
       time,
     );
 
-    // --- egui ---
     let raw_input = self.egui_state.take_egui_input(&self.window);
     let full_output = self.egui_ctx.run_ui(raw_input, |ctx| {
       self.hierarchy.draw(&self.scene, ctx);

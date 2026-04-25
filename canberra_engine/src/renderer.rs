@@ -4,7 +4,7 @@ use glam::Mat4;
 
 use crate::{
   Entity, Scene, Vertex,
-  components::{Material, Mesh, ShaderKind, Transform},
+  components::{Material, Mesh, Transform},
 };
 
 mod asset_manager;
@@ -15,7 +15,7 @@ mod shader_registry;
 
 pub use self::{
   asset_manager::{AssetManager, MeshHandle},
-  shader_registry::{ShaderHandle, ShaderRegistry},
+  shader_registry::{GLOBAL_SHADER_REGISTRY, ShaderHandle, ShaderRegistry},
 };
 pub(crate) use self::{
   camera_uniform::CameraUniform, gpu_mesh::GpuMesh, object_uniform_data::ObjectUniformData,
@@ -26,9 +26,7 @@ const OBJECT_STRIDE: u64 = 256;
 const MAX_OBJECTS: u64 = 256;
 
 pub struct Renderer {
-  pipeline_lit: wgpu::RenderPipeline,
-  pipeline_unlit: wgpu::RenderPipeline,
-  custom_pipelines: HashMap<ShaderHandle, wgpu::RenderPipeline>,
+  pipelines: HashMap<ShaderHandle, wgpu::RenderPipeline>,
   camera_buffer: wgpu::Buffer,
   camera_bind_group: wgpu::BindGroup,
   object_buffer: wgpu::Buffer,
@@ -44,11 +42,7 @@ impl Renderer {
     surface_format: wgpu::TextureFormat,
     width: u32,
     height: u32,
-    registry: ShaderRegistry,
   ) -> Self {
-    let shader_lit = device.create_shader_module(wgpu::include_wgsl!("shader_lit.wgsl"));
-    let shader_unlit = device.create_shader_module(wgpu::include_wgsl!("shader_unlit.wgsl"));
-
     let camera_bgl = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
       label: Some("camera_bgl"),
       entries: &[wgpu::BindGroupLayoutEntry {
@@ -119,19 +113,17 @@ impl Renderer {
       immediate_size: 0,
     });
 
-    let pipeline_lit = make_pipeline(device, &shader_lit, &pipeline_layout, surface_format);
-    let pipeline_unlit = make_pipeline(device, &shader_unlit, &pipeline_layout, surface_format);
-
-    let custom_pipelines = registry
-      .sources
-      .into_iter()
-      .map(|(handle, wgsl)| {
+    let registry = GLOBAL_SHADER_REGISTRY.read().expect("lock poisoned");
+    let pipelines = registry
+      .shaders
+      .iter()
+      .map(|(handle, shader)| {
         let module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-          label: None,
-          source: wgpu::ShaderSource::Wgsl(wgsl.into()),
+          label: Some(&shader.name),
+          source: wgpu::ShaderSource::Wgsl(shader.wgsl.clone().into()),
         });
         (
-          handle,
+          handle.clone(),
           make_pipeline(device, &module, &pipeline_layout, surface_format),
         )
       })
@@ -140,9 +132,7 @@ impl Renderer {
     let (depth_texture, depth_view) = Self::make_depth_texture(device, width.max(1), height.max(1));
 
     Self {
-      pipeline_lit,
-      pipeline_unlit,
-      custom_pipelines,
+      pipelines,
       camera_buffer,
       camera_bind_group,
       object_buffer,
@@ -233,14 +223,12 @@ impl Renderer {
         .get_component::<Material>()
         .map(|m| m.shader)
         .unwrap_or_default();
-      let pipeline = match shader {
-        ShaderKind::DefaultLit => &self.pipeline_lit,
-        ShaderKind::DefaultUnlit => &self.pipeline_unlit,
-        ShaderKind::Custom(handle) => self
-          .custom_pipelines
-          .get(&handle)
-          .unwrap_or(&self.pipeline_lit),
-      };
+      let pipeline = self.pipelines.get(&shader).unwrap_or_else(|| {
+        self
+          .pipelines
+          .get(&ShaderHandle::default())
+          .expect("No default pipeline")
+      });
       pass.set_pipeline(pipeline);
       pass.set_bind_group(0, &self.camera_bind_group, &[]);
 

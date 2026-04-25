@@ -2,15 +2,15 @@ mod state;
 use std::sync::Arc;
 
 pub use self::state::ApplicationState;
-use crate::{Result, Scene, renderer::ShaderRegistry};
+use crate::{Result, Scene};
 
 pub struct Application {
   pub state: Option<ApplicationState>,
-  scene_builder: Option<Box<dyn FnOnce(&mut ShaderRegistry) -> Scene>>,
+  scene_builder: Option<Box<dyn FnOnce() -> Scene>>,
 }
 
 impl Application {
-  pub fn run<F: FnOnce(&mut ShaderRegistry) -> Scene + 'static>(scene_builder: F) -> Result<()> {
+  pub fn run<F: FnOnce() -> Scene + 'static>(scene_builder: F) -> Result<()> {
     let event_loop = crate::window::event_loop()?;
     let mut app = Self {
       state: None,

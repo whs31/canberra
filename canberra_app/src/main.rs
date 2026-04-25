@@ -1,16 +1,19 @@
 mod error;
 
 use canberra_engine::{
-  Application, Entity, Scene,
-  components::{Camera, Material, Mesh, ShaderKind, Transform},
+  Application, Entity, GLOBAL_SHADER_REGISTRY, Scene, Shader,
+  components::{Camera, Material, Mesh, Transform},
 };
 use glam::Vec3;
 
 pub use self::error::{Error, Result};
 
 fn try_main() -> Result<()> {
-  Application::run(|shaders| {
-    let wobble_shader = shaders.register(include_str!("wobble.wgsl"));
+  Application::run(|| {
+    let wobble_shader = GLOBAL_SHADER_REGISTRY
+      .write()
+      .unwrap()
+      .register(Shader::new("Wobble", include_str!("wobble.wgsl")));
     let mut scene = Scene::new();
 
     // Camera
@@ -63,7 +66,7 @@ fn try_main() -> Result<()> {
     wobbly.add_component(Mesh::cube());
     wobbly.add_component(Material {
       color: [0.9, 0.5, 0.1, 1.0],
-      shader: ShaderKind::Custom(wobble_shader),
+      shader: wobble_shader,
     });
     scene.add(wobbly);
 
