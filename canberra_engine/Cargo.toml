@@ -9,6 +9,7 @@ repository.workspace = true
 [dependencies]
 thiserror = { workspace = true }
 tracing = { workspace = true }
+arc-swap = { workspace = true }
 wgpu = { workspace = true }
 winit = { workspace = true }
 egui = { workspace = true }

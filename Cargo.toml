@@ -22,6 +22,7 @@ canberra_engine = { path = "./canberra_engine" }
 # core
 thiserror = "2"
 uuid = { version = "1", features = ["v4", "serde"] }
+arc-swap = "1"
 
 # logging
 tracing = "0.1"

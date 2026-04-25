@@ -1,18 +1,30 @@
 use std::{
-  collections::HashMap,
-  sync::{LazyLock, RwLock},
+  collections::BTreeMap,
+  sync::{Arc, LazyLock},
 };
+
+use arc_swap::ArcSwap;
 
 use crate::Shader;
 
 /// Opaque handle to a custom compiled shader pipeline.
 #[derive(
-  Debug, Default, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize,
+  Debug,
+  Default,
+  Clone,
+  Copy,
+  PartialEq,
+  Eq,
+  PartialOrd,
+  Ord,
+  Hash,
+  serde::Serialize,
+  serde::Deserialize,
 )]
 pub struct ShaderHandle(pub(crate) u32);
 
-pub static GLOBAL_SHADER_REGISTRY: LazyLock<RwLock<ShaderRegistry>> =
-  LazyLock::new(|| RwLock::new(ShaderRegistry::new()));
+pub static GLOBAL_SHADER_REGISTRY: LazyLock<ArcSwap<ShaderRegistry>> =
+  LazyLock::new(|| ArcSwap::from_pointee(ShaderRegistry::new()));
 
 impl std::fmt::Display for ShaderHandle {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -23,15 +35,16 @@ impl std::fmt::Display for ShaderHandle {
 /// Pre-device registry: stores WGSL source strings and assigns handles.
 /// Pass `&mut ShaderRegistry` to the scene builder, register your WGSL,
 /// then the renderer compiles everything during initialisation.
+#[derive(Debug, Clone)]
 pub struct ShaderRegistry {
-  pub(crate) shaders: HashMap<ShaderHandle, Shader>,
+  pub(crate) shaders: BTreeMap<ShaderHandle, Shader>,
   next_id: u32,
 }
 
 impl ShaderRegistry {
   fn new() -> Self {
     Self {
-      shaders: HashMap::new(),
+      shaders: BTreeMap::new(),
       next_id: 0,
     }
     .register_default()
@@ -66,6 +79,12 @@ impl ShaderRegistry {
     ));
     self
   }
+}
+
+pub fn register_shaders<F: FnOnce(&mut ShaderRegistry)>(ctx: F) {
+  let mut registry = (**GLOBAL_SHADER_REGISTRY.load()).clone();
+  ctx(&mut registry);
+  GLOBAL_SHADER_REGISTRY.store(Arc::new(registry));
 }
 
 impl Default for ShaderRegistry {

@@ -42,7 +42,7 @@ impl Component for Camera {
   }
 
   fn inspect(&mut self, ui: &mut egui::Ui) {
-    const DRAG_WIDTH: f32 = 60.0; // Slightly wider for scientific notation/precision
+    const DRAG_WIDTH: f32 = 60.0; 
 
     egui::Grid::new("camera")
       .num_columns(2)

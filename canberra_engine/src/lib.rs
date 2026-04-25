@@ -12,7 +12,10 @@ pub use self::{
   application::{Application, ApplicationState},
   error::{Error, Result},
   hierarchy::{Component, Entity},
-  renderer::{AssetManager, GLOBAL_SHADER_REGISTRY, MeshHandle, ShaderHandle, ShaderRegistry},
+  renderer::{
+    AssetManager, GLOBAL_SHADER_REGISTRY, MeshHandle, ShaderHandle, ShaderRegistry,
+    register_shaders,
+  },
   scene::Scene,
   types::{Shader, Vertex},
 };

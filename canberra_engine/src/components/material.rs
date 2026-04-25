@@ -54,7 +54,7 @@ impl Component for Material {
 
         ui.label("Shader");
 
-        let registry = GLOBAL_SHADER_REGISTRY.read().expect("lock poisoned");
+        let registry = GLOBAL_SHADER_REGISTRY.load();
         let selected_text = registry
           .get(self.shader)
           .map(|s| s.name.clone())
@@ -66,9 +66,8 @@ impl Component for Material {
             let mut handles: Vec<_> = registry.shaders.keys().collect();
             handles.sort_by_key(|h| h.0);
 
-            for handle in handles {
-              let shader_name = &registry.shaders[handle].name;
-              ui.selectable_value(&mut self.shader, *handle, shader_name);
+            for (handle, shader) in &registry.shaders {
+              ui.selectable_value(&mut self.shader, *handle, &shader.name);
             }
           });
         ui.end_row();

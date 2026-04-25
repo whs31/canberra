@@ -15,7 +15,7 @@ mod shader_registry;
 
 pub use self::{
   asset_manager::{AssetManager, MeshHandle},
-  shader_registry::{GLOBAL_SHADER_REGISTRY, ShaderHandle, ShaderRegistry},
+  shader_registry::{GLOBAL_SHADER_REGISTRY, ShaderHandle, ShaderRegistry, register_shaders},
 };
 pub(crate) use self::{
   camera_uniform::CameraUniform, gpu_mesh::GpuMesh, object_uniform_data::ObjectUniformData,
@@ -113,7 +113,7 @@ impl Renderer {
       immediate_size: 0,
     });
 
-    let registry = GLOBAL_SHADER_REGISTRY.read().expect("lock poisoned");
+    let registry = GLOBAL_SHADER_REGISTRY.load();
     let pipelines = registry
       .shaders
       .iter()

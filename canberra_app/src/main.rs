@@ -1,8 +1,9 @@
 mod error;
 
 use canberra_engine::{
-  Application, Entity, GLOBAL_SHADER_REGISTRY, Scene, Shader,
+  Application, Entity, Scene, Shader, ShaderHandle,
   components::{Camera, Material, Mesh, Transform},
+  register_shaders,
 };
 use glam::Vec3;
 
@@ -10,10 +11,12 @@ pub use self::error::{Error, Result};
 
 fn try_main() -> Result<()> {
   Application::run(|| {
-    let wobble_shader = GLOBAL_SHADER_REGISTRY
-      .write()
-      .unwrap()
-      .register(Shader::new("Wobble", include_str!("wobble.wgsl")));
+    let mut wobble_shader = ShaderHandle::default();
+    let mut bloom_shader = ShaderHandle::default();
+    register_shaders(|registry| {
+      wobble_shader = registry.register(Shader::new("Wobble", include_str!("wobble.wgsl")));
+      bloom_shader = registry.register(Shader::new("Bloom", include_str!("bloom.wgsl")));
+    });
     let mut scene = Scene::new();
 
     // Camera
@@ -69,6 +72,16 @@ fn try_main() -> Result<()> {
       shader: wobble_shader,
     });
     scene.add(wobbly);
+
+    // Bloom cube
+    let mut bloomy = Entity::new("Bloom Cube");
+    bloomy.add_component(Transform::from_translation(Vec3::new(3.0, 4.0, 0.0)));
+    bloomy.add_component(Mesh::cube());
+    bloomy.add_component(Material {
+      color: [1.0, 1.0, 0.3, 1.0],
+      shader: bloom_shader,
+    });
+    scene.add(bloomy);
 
     scene
   })?;
