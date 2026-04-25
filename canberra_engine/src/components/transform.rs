@@ -47,28 +47,53 @@ impl Component for Transform {
     self
   }
 
-  fn inspect(&self, ui: &mut egui::Ui) {
-    let euler = self.rotation.to_euler(glam::EulerRot::XYZ);
+  fn inspect(&mut self, ui: &mut egui::Ui) {
+    const X: egui::Color32 = egui::Color32::from_rgb(210, 70, 70);
+    const Y: egui::Color32 = egui::Color32::from_rgb(70, 190, 70);
+    const Z: egui::Color32 = egui::Color32::from_rgb(70, 110, 210);
+
     egui::Grid::new("transform").num_columns(2).spacing([8.0, 4.0]).show(ui, |ui| {
       ui.label("Position");
-      ui.label(format!(
-        "{:.3},  {:.3},  {:.3}",
-        self.position.x, self.position.y, self.position.z
-      ));
+      ui.horizontal(|ui| {
+        ui.colored_label(X, "X");
+        ui.add(egui::DragValue::new(&mut self.position.x).speed(0.1));
+        ui.colored_label(Y, "Y");
+        ui.add(egui::DragValue::new(&mut self.position.y).speed(0.1));
+        ui.colored_label(Z, "Z");
+        ui.add(egui::DragValue::new(&mut self.position.z).speed(0.1));
+      });
       ui.end_row();
+
       ui.label("Rotation");
-      ui.label(format!(
-        "{:.1}°,  {:.1}°,  {:.1}°",
-        euler.0.to_degrees(),
-        euler.1.to_degrees(),
-        euler.2.to_degrees()
-      ));
+      let euler = self.rotation.to_euler(glam::EulerRot::XYZ);
+      let mut ex = euler.0.to_degrees();
+      let mut ey = euler.1.to_degrees();
+      let mut ez = euler.2.to_degrees();
+      ui.horizontal(|ui| {
+        ui.colored_label(X, "X");
+        ui.add(egui::DragValue::new(&mut ex).speed(0.5).suffix("°"));
+        ui.colored_label(Y, "Y");
+        ui.add(egui::DragValue::new(&mut ey).speed(0.5).suffix("°"));
+        ui.colored_label(Z, "Z");
+        ui.add(egui::DragValue::new(&mut ez).speed(0.5).suffix("°"));
+      });
+      self.rotation = glam::Quat::from_euler(
+        glam::EulerRot::XYZ,
+        ex.to_radians(),
+        ey.to_radians(),
+        ez.to_radians(),
+      );
       ui.end_row();
+
       ui.label("Scale");
-      ui.label(format!(
-        "{:.3},  {:.3},  {:.3}",
-        self.scale.x, self.scale.y, self.scale.z
-      ));
+      ui.horizontal(|ui| {
+        ui.colored_label(X, "X");
+        ui.add(egui::DragValue::new(&mut self.scale.x).speed(0.01));
+        ui.colored_label(Y, "Y");
+        ui.add(egui::DragValue::new(&mut self.scale.y).speed(0.01));
+        ui.colored_label(Z, "Z");
+        ui.add(egui::DragValue::new(&mut self.scale.z).speed(0.01));
+      });
       ui.end_row();
     });
   }

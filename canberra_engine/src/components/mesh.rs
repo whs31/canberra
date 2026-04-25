@@ -21,7 +21,7 @@ impl Component for Mesh {
     self
   }
 
-  fn inspect(&self, ui: &mut egui::Ui) {
+  fn inspect(&mut self, ui: &mut egui::Ui) {
     egui::Grid::new("mesh").num_columns(2).spacing([8.0, 4.0]).show(ui, |ui| {
       ui.label("Vertices");
       ui.label(self.vertices.len().to_string());

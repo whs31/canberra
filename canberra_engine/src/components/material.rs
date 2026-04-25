@@ -34,7 +34,7 @@ impl Component for Material {
     self
   }
 
-  fn inspect(&self, ui: &mut egui::Ui) {
+  fn inspect(&mut self, ui: &mut egui::Ui) {
     let [r, g, b, a] = self.color;
     let swatch = egui::Color32::from_rgba_unmultiplied(
       (r * 255.0) as u8,

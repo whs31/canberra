@@ -5,7 +5,7 @@ pub trait Component: Any + std::fmt::Debug {
   fn as_any(&self) -> &dyn Any;
   fn as_any_mut(&mut self) -> &mut dyn Any;
 
-  fn inspect(&self, ui: &mut egui::Ui) {
+  fn inspect(&mut self, ui: &mut egui::Ui) {
     ui.label(self.name());
   }
 }

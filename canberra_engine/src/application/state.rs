@@ -177,7 +177,7 @@ impl ApplicationState {
     let raw_input = self.egui_state.take_egui_input(&self.window);
     let full_output = self.egui_ctx.run_ui(raw_input, |ctx| {
       self.hierarchy.draw(&self.scene, ctx);
-      self.inspector.draw(self.hierarchy.selected, &self.scene, ctx);
+      self.inspector.draw(self.hierarchy.selected, &mut self.scene, ctx);
     });
     self
       .egui_state
