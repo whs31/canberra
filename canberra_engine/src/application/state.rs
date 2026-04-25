@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{Error, Result, Scene, components::DebugUI, editor::Inspector, renderer::Renderer};
+use crate::{Error, Result, Scene, editor::Inspector, renderer::Renderer};
 
 pub struct ApplicationState {
   // Drop order matters: fields are dropped top-to-bottom.
@@ -175,11 +175,6 @@ impl ApplicationState {
     #[allow(deprecated)]
     let full_output = self.egui_ctx.run(raw_input, |ctx| {
       self.inspector.draw(&self.scene, ctx);
-      for entity in &self.scene.entities {
-        if let Some(ui) = entity.get_component::<DebugUI>() {
-          ui.draw(ctx);
-        }
-      }
     });
     self
       .egui_state

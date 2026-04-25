@@ -4,7 +4,7 @@ use glam::{Mat4, Quat, Vec3};
 
 use crate::Component;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Transform {
   pub position: Vec3,
   pub rotation: Quat,

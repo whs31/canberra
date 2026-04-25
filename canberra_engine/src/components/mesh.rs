@@ -2,7 +2,7 @@ use std::any::Any;
 
 use crate::{Component, Vertex};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Mesh {
   pub vertices: Vec<Vertex>,
   pub indices: Vec<u16>,

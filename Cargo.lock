@@ -317,6 +317,7 @@ dependencies = [
  "glam",
  "num-traits",
  "pollster",
+ "serde",
  "thiserror 2.0.18",
  "tokio",
  "tracing",
@@ -854,6 +855,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f70749695b063ecbf6b62949ccccde2e733ec3ecbbd71d467dca4e5c6c97cca0"
 dependencies = [
  "bytemuck",
+ "serde_core",
 ]
 
 [[package]]
@@ -2752,6 +2754,7 @@ checksum = "ddd74a9687298c6858e9b88ec8935ec45d22e8fd5e6394fa1bd4e99a87789c76"
 dependencies = [
  "getrandom 0.4.2",
  "js-sys",
+ "serde_core",
  "wasm-bindgen",
 ]
 

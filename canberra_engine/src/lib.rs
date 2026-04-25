@@ -10,7 +10,6 @@ pub(crate) mod window;
 
 pub use self::{
   application::{Application, ApplicationState},
-  components::DebugUI,
   error::{Error, Result},
   hierarchy::{Component, Entity},
   renderer::{AssetManager, MeshHandle},

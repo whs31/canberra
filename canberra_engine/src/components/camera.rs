@@ -4,7 +4,7 @@ use glam::Mat4;
 
 use crate::Component;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Camera {
   pub fov_y: f32,
   pub aspect: f32,

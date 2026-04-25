@@ -5,6 +5,7 @@ use crate::{
   components::{Camera, Transform},
 };
 
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct Scene {
   pub entities: Vec<Entity>,
 }

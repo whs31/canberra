@@ -2,7 +2,7 @@ use std::any::Any;
 
 use crate::Component;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Material {
   pub color: [f32; 4],
 }

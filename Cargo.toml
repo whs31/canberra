@@ -21,7 +21,7 @@ canberra_engine = { path = "./canberra_engine" }
 
 # core
 thiserror = "2"
-uuid = { version = "1", features = ["v4"] }
+uuid = { version = "1", features = ["v4", "serde"] }
 
 # logging
 tracing = "0.1"
@@ -42,7 +42,7 @@ pollster = "0.4"
 
 # math / raw-bytes
 bytemuck = { version = "1", features = ["derive"] }
-glam = { version = "0.32", features = ["bytemuck"] }
+glam = { version = "0.32", features = ["bytemuck", "serde"] }
 num-traits = { version = "0.2" }
 
 # serde
