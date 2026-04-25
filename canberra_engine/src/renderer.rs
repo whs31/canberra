@@ -1,5 +1,7 @@
+use glam::Mat4;
+
 use crate::{
-  Scene, Vertex,
+  Entity, Scene, Vertex,
   components::{Material, Mesh, Transform},
 };
 
@@ -195,21 +197,19 @@ impl Renderer {
       }]),
     );
 
-    let renderables: Vec<_> = scene
-      .entities
-      .iter()
-      .filter(|e| e.get_component::<Mesh>().is_some() && e.get_component::<Transform>().is_some())
-      .collect();
+    let mut renderables: Vec<(Mat4, &Entity)> = Vec::new();
+    for root in &scene.entities {
+      collect_renderables(root, Mat4::IDENTITY, &mut renderables);
+    }
 
-    let mut object_data = vec![0u8; (renderables.len() as u64 * OBJECT_STRIDE) as usize];
-    for (i, entity) in renderables.iter().enumerate() {
-      let transform = entity.get_component::<Transform>().unwrap();
+    let mut object_data = vec![0u8; renderables.len() * OBJECT_STRIDE as usize];
+    for (i, (world_mat, entity)) in renderables.iter().enumerate() {
       let color = entity
         .get_component::<Material>()
         .map(|m| m.color)
         .unwrap_or([1.0, 1.0, 1.0, 1.0]);
       let uniform = ObjectUniformData {
-        model: transform.matrix().to_cols_array_2d(),
+        model: world_mat.to_cols_array_2d(),
         color,
       };
       let offset = i * OBJECT_STRIDE as usize;
@@ -252,7 +252,7 @@ impl Renderer {
     pass.set_pipeline(&self.pipeline);
     pass.set_bind_group(0, &self.camera_bind_group, &[]);
 
-    for (i, entity) in renderables.iter().enumerate() {
+    for (i, (_, entity)) in renderables.iter().enumerate() {
       let mesh = entity.get_component::<Mesh>().unwrap();
       let (_, gpu_mesh) = self.asset_manager.get_or_upload(device, mesh);
 
@@ -285,5 +285,19 @@ impl Renderer {
     });
     let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
     (texture, view)
+  }
+}
+
+fn collect_renderables<'a>(entity: &'a Entity, parent_world: Mat4, out: &mut Vec<(Mat4, &'a Entity)>) {
+  let local = entity
+    .get_component::<Transform>()
+    .map(|t| t.matrix())
+    .unwrap_or(Mat4::IDENTITY);
+  let world = parent_world * local;
+  if entity.get_component::<Mesh>().is_some() {
+    out.push((world, entity));
+  }
+  for child in entity.children() {
+    collect_renderables(child, world, out);
   }
 }

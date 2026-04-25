@@ -11,6 +11,7 @@ pub struct Entity {
   id: Uuid,
   pub name: String,
   components: HashMap<TypeId, Box<dyn Component>>,
+  children: Vec<Entity>,
 }
 
 impl Entity {
@@ -19,6 +20,7 @@ impl Entity {
       id: Uuid::new_v4(),
       name: name.to_string(),
       components: HashMap::new(),
+      children: Vec::new(),
     }
   }
 
@@ -47,6 +49,19 @@ impl Entity {
       .and_then(|c| c.as_any_mut().downcast_mut::<C>())
   }
 
+  pub fn add_child(&mut self, child: Entity) -> &mut Self {
+    self.children.push(child);
+    self
+  }
+
+  pub fn children(&self) -> &[Entity] {
+    &self.children
+  }
+
+  pub fn children_mut(&mut self) -> &mut [Entity] {
+    &mut self.children
+  }
+
   pub fn iter(&self) -> impl Iterator<Item = &dyn Component> {
     self.components.iter().map(|(_, b)| b.as_ref())
   }
@@ -58,24 +73,25 @@ impl Entity {
 
 // ── serde ────────────────────────────────────────────────────────────────────
 
-#[derive(Serialize, Deserialize)]
-struct SerializedEntity {
-  id: Uuid,
-  name: String,
-  components: Vec<ComponentData>,
-}
-
 impl Serialize for Entity {
   fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-    let components: Vec<ComponentData> = self
+    #[derive(Serialize)]
+    struct Ser<'a> {
+      id: &'a Uuid,
+      name: &'a str,
+      components: Vec<ComponentData>,
+      children: &'a [Entity],
+    }
+    let components = self
       .components
       .values()
       .filter_map(|c| ComponentData::from_component(c.as_ref()))
       .collect();
-    SerializedEntity {
-      id: self.id,
-      name: self.name.clone(),
+    Ser {
+      id: &self.id,
+      name: &self.name,
       components,
+      children: &self.children,
     }
     .serialize(s)
   }
@@ -83,7 +99,15 @@ impl Serialize for Entity {
 
 impl<'de> Deserialize<'de> for Entity {
   fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-    let raw = SerializedEntity::deserialize(d)?;
+    #[derive(Deserialize)]
+    struct De {
+      id: Uuid,
+      name: String,
+      components: Vec<ComponentData>,
+      #[serde(default)]
+      children: Vec<Entity>,
+    }
+    let raw = De::deserialize(d)?;
     let mut components: HashMap<TypeId, Box<dyn Component>> =
       HashMap::with_capacity(raw.components.len());
     for cd in raw.components {
@@ -94,6 +118,7 @@ impl<'de> Deserialize<'de> for Entity {
       id: raw.id,
       name: raw.name,
       components,
+      children: raw.children,
     })
   }
 }

@@ -18,7 +18,9 @@ fn try_main() -> Result<()> {
     cam.add_component(Camera::new(60_f32.to_radians(), 1.0, 0.1, 100.0));
     scene.add(cam);
 
-    // 3 cubes of different colors
+    // Group: 3 cubes of different colors
+    let mut colored_group = Entity::new("ColoredCubes");
+    colored_group.add_component(Transform::default());
     let unique: &[([f32; 4], &str)] = &[
       ([0.9, 0.2, 0.2, 1.0], "Cube_Red"),
       ([0.2, 0.9, 0.2, 1.0], "Cube_Green"),
@@ -33,14 +35,16 @@ fn try_main() -> Result<()> {
       )));
       e.add_component(Mesh::cube());
       e.add_component(Material::with_color(color));
-      scene.add(e);
+      colored_group.add_child(e);
     }
+    scene.add(colored_group);
 
-    // 3 cubes of the same color (gold)
+    // Group: 3 cubes of the same color (gold)
+    let mut same_group = Entity::new("SameCubes");
+    same_group.add_component(Transform::default());
     let gold = [1.0f32, 0.75, 0.0, 1.0];
     for i in 0..3usize {
-      let name = format!("CubeSame_{i}");
-      let mut e = Entity::new(&name);
+      let mut e = Entity::new(&format!("CubeSame_{i}"));
       e.add_component(Transform::from_translation(Vec3::new(
         (i as f32 - 1.0) * 3.0,
         1.5,
@@ -48,8 +52,9 @@ fn try_main() -> Result<()> {
       )));
       e.add_component(Mesh::cube());
       e.add_component(Material::with_color(gold));
-      scene.add(e);
+      same_group.add_child(e);
     }
+    scene.add(same_group);
 
     scene
   })?;
