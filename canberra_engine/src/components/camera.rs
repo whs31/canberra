@@ -42,18 +42,47 @@ impl Component for Camera {
   }
 
   fn inspect(&mut self, ui: &mut egui::Ui) {
+    const DRAG_WIDTH: f32 = 60.0; // Slightly wider for scientific notation/precision
+
     egui::Grid::new("camera")
       .num_columns(2)
       .spacing([8.0, 4.0])
       .show(ui, |ui| {
         ui.label("FOV");
-        ui.label(format!("{:.1}°", self.fov_y.to_degrees()));
+        let mut fov_deg = self.fov_y.to_degrees();
+        if ui
+          .add_sized(
+            [DRAG_WIDTH, ui.available_height()],
+            egui::DragValue::new(&mut fov_deg)
+              .suffix("°")
+              .speed(0.1)
+              .max_decimals(1)
+              .range(1.0..=179.0),
+          )
+          .changed()
+        {
+          self.fov_y = fov_deg.to_radians();
+        }
         ui.end_row();
+
         ui.label("Near");
-        ui.label(format!("{:.4}", self.near));
+        ui.add_sized(
+          [DRAG_WIDTH, ui.available_height()],
+          egui::DragValue::new(&mut self.near)
+            .speed(0.01)
+            .max_decimals(3)
+            .range(0.001..=self.far),
+        );
         ui.end_row();
+
         ui.label("Far");
-        ui.label(format!("{:.1}", self.far));
+        ui.add_sized(
+          [DRAG_WIDTH, ui.available_height()],
+          egui::DragValue::new(&mut self.far)
+            .speed(1.0)
+            .max_decimals(1)
+            .range(self.near..=10000.0),
+        );
         ui.end_row();
       });
   }

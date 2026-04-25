@@ -49,23 +49,12 @@ impl Component for Material {
   }
 
   fn inspect(&mut self, ui: &mut egui::Ui) {
-    let [r, g, b, a] = self.color;
-    let swatch = egui::Color32::from_rgba_unmultiplied(
-      (r * 255.0) as u8,
-      (g * 255.0) as u8,
-      (b * 255.0) as u8,
-      (a * 255.0) as u8,
-    );
     egui::Grid::new("material")
       .num_columns(2)
       .spacing([8.0, 4.0])
       .show(ui, |ui| {
         ui.label("Color");
-        ui.horizontal(|ui| {
-          let (rect, _) = ui.allocate_exact_size(egui::vec2(32.0, 16.0), egui::Sense::hover());
-          ui.painter().rect_filled(rect, 3.0, swatch);
-          ui.label(format!("({r:.2}, {g:.2}, {b:.2}, {a:.2})"));
-        });
+        ui.color_edit_button_rgba_unmultiplied(&mut self.color);
         ui.end_row();
 
         ui.label("Shader");
