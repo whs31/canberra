@@ -30,9 +30,9 @@ impl Inspector {
 
           if is_selected {
             ui.indent(i, |ui| {
-              for component in entity.components() {
-                ui.label(format!("  \u{2022} {}", component.name()));
-              }
+              entity.iter().for_each(|c| {
+                ui.label(format!("  \u{2022} {}", c.name()));
+              });
             });
           }
         }

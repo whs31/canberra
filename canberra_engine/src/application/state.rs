@@ -163,7 +163,7 @@ impl ApplicationState {
     let aspect = self.config.width as f32 / self.config.height as f32;
     self
       .renderer
-      .render(&self.scene, &self.queue, &view, &mut encoder, aspect);
+      .render(&self.device, &self.scene, &self.queue, &view, &mut encoder, aspect);
 
     // --- egui ---
     let raw_input = self.egui_state.take_egui_input(&self.window);

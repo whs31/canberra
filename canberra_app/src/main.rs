@@ -31,7 +31,7 @@ fn try_main() -> Result<()> {
         -1.5,
         0.0,
       )));
-      e.add_component(Mesh::default_cube(device));
+      e.add_component(Mesh::cube());
       e.add_component(Material::with_color(color));
       scene.add(e);
     }
@@ -46,7 +46,7 @@ fn try_main() -> Result<()> {
         1.5,
         0.0,
       )));
-      e.add_component(Mesh::default_cube(device));
+      e.add_component(Mesh::cube());
       e.add_component(Material::with_color(gold));
       scene.add(e);
     }

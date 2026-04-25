@@ -1,7 +1,15 @@
+use std::collections::HashMap;
+
+use uuid::Uuid;
+
 use crate::{
   Scene, Vertex,
   components::{Material, Mesh, Transform},
 };
+
+mod gpu_mesh;
+
+pub use self::gpu_mesh::GpuMesh;
 
 const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
 const OBJECT_STRIDE: u64 = 256;
@@ -28,6 +36,7 @@ pub struct Renderer {
   object_bind_group: wgpu::BindGroup,
   depth_texture: wgpu::Texture,
   depth_view: wgpu::TextureView,
+  mesh_cache: HashMap<Uuid, GpuMesh>,
 }
 
 impl Renderer {
@@ -169,6 +178,7 @@ impl Renderer {
       object_bind_group,
       depth_texture,
       depth_view,
+      mesh_cache: HashMap::with_capacity(1024),
     }
   }
 
@@ -179,7 +189,8 @@ impl Renderer {
   }
 
   pub fn render(
-    &self,
+    &mut self,
+    device: &wgpu::Device,
     scene: &Scene,
     queue: &wgpu::Queue,
     view: &wgpu::TextureView,
@@ -254,11 +265,17 @@ impl Renderer {
 
     for (i, entity) in renderables.iter().enumerate() {
       let mesh = entity.get_component::<Mesh>().unwrap();
+      let entity_id = entity.id();
+      let gpu_mesh = self
+        .mesh_cache
+        .entry(entity_id)
+        .or_insert_with(|| GpuMesh::upload(device, mesh));
+
       let dynamic_offset = (i as u64 * OBJECT_STRIDE) as u32;
       pass.set_bind_group(1, &self.object_bind_group, &[dynamic_offset]);
-      pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
-      pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-      pass.draw_indexed(0..mesh.index_count, 0, 0..1);
+      pass.set_vertex_buffer(0, gpu_mesh.vertex_buffer.slice(..));
+      pass.set_index_buffer(gpu_mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+      pass.draw_indexed(0..gpu_mesh.index_count, 0, 0..1);
     }
   }
 

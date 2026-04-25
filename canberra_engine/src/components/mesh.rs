@@ -6,9 +6,8 @@ use crate::{Component, Vertex};
 
 #[derive(Debug, Clone)]
 pub struct Mesh {
-  pub vertex_buffer: wgpu::Buffer,
-  pub index_buffer: wgpu::Buffer,
-  pub index_count: u32,
+  pub vertices: Vec<Vertex>,
+  pub indices: Vec<u16>,
 }
 
 impl Component for Mesh {
@@ -26,24 +25,12 @@ impl Component for Mesh {
 }
 
 impl Mesh {
-  pub fn new(device: &wgpu::Device, vertices: &[Vertex], indices: &[u16]) -> Self {
-    Self {
-      vertex_buffer: device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        label: Some("mesh vertex buffer"),
-        contents: bytemuck::cast_slice(vertices),
-        usage: wgpu::BufferUsages::VERTEX,
-      }),
-      index_buffer: device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        label: Some("mesh index buffer"),
-        contents: bytemuck::cast_slice(indices),
-        usage: wgpu::BufferUsages::INDEX,
-      }),
-      index_count: indices.len() as u32,
-    }
+  pub fn new(vertices: Vec<Vertex>, indices: Vec<u16>) -> Self {
+    Self { vertices, indices }
   }
 
-  pub fn default_cube(device: &wgpu::Device) -> Self {
-    Self::new(device, &CUBE_VERTICES, &CUBE_INDICES)
+  pub fn cube() -> Self {
+    Self::new(CUBE_VERTICES.to_vec(), CUBE_INDICES.to_vec())
   }
 }
 
