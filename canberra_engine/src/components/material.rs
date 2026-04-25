@@ -34,6 +34,7 @@ impl Material {
   }
 }
 
+#[typetag::serde]
 impl Component for Material {
   fn name(&self) -> &'static str {
     "Material"

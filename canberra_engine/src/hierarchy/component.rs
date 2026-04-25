@@ -1,5 +1,6 @@
 use std::any::Any;
 
+#[typetag::serde(tag = "type")]
 pub trait Component: Any + std::fmt::Debug {
   fn name(&self) -> &'static str;
   fn as_any(&self) -> &dyn Any;

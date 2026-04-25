@@ -27,6 +27,7 @@ impl Camera {
   }
 }
 
+#[typetag::serde]
 impl Component for Camera {
   fn name(&self) -> &'static str {
     "Camera"

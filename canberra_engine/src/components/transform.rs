@@ -34,6 +34,7 @@ impl Transform {
   }
 }
 
+#[typetag::serde]
 impl Component for Transform {
   fn name(&self) -> &'static str {
     "Transform"
@@ -51,6 +52,7 @@ impl Component for Transform {
     const X: egui::Color32 = egui::Color32::from_rgb(210, 70, 70);
     const Y: egui::Color32 = egui::Color32::from_rgb(70, 190, 70);
     const Z: egui::Color32 = egui::Color32::from_rgb(70, 110, 210);
+    const DRAG_WIDTH: f32 = 50.0;
 
     egui::Grid::new("transform")
       .num_columns(2)
@@ -58,29 +60,49 @@ impl Component for Transform {
       .show(ui, |ui| {
         ui.label("Position");
         ui.horizontal(|ui| {
-          ui.colored_label(X, "X");
-          ui.add(egui::DragValue::new(&mut self.position.x).speed(0.1));
-          ui.colored_label(Y, "Y");
-          ui.add(egui::DragValue::new(&mut self.position.y).speed(0.1));
-          ui.colored_label(Z, "Z");
-          ui.add(egui::DragValue::new(&mut self.position.z).speed(0.1));
+          for (val, color) in [
+            (&mut self.position.x, X),
+            (&mut self.position.y, Y),
+            (&mut self.position.z, Z),
+          ] {
+            ui.colored_label(
+              color,
+              if color == X {
+                "X"
+              } else if color == Y {
+                "Y"
+              } else {
+                "Z"
+              },
+            );
+            ui.add_sized(
+              [DRAG_WIDTH, ui.available_height()],
+              egui::DragValue::new(val).max_decimals(1).speed(0.1),
+            );
+          }
         });
         ui.end_row();
 
         ui.label("Rotation");
-        let euler = self.rotation.to_euler(glam::EulerRot::XYZ);
-        let mut ex = euler.0.to_degrees();
-        let mut ey = euler.1.to_degrees();
-        let mut ez = euler.2.to_degrees();
+        let (mut ex, mut ey, mut ez) = self.rotation.to_euler(glam::EulerRot::XYZ);
+        ex = ex.to_degrees();
+        ey = ey.to_degrees();
+        ez = ez.to_degrees();
+
         ui.horizontal(|ui| {
-          ui.colored_label(X, "X");
-          ui.add(egui::DragValue::new(&mut ex).speed(0.5).suffix("°"));
-          ui.colored_label(Y, "Y");
-          ui.add(egui::DragValue::new(&mut ey).speed(0.5).suffix("°"));
-          ui.colored_label(Z, "Z");
-          ui.add(egui::DragValue::new(&mut ez).speed(0.5).suffix("°"));
+          let axes = [(&mut ex, X, "X"), (&mut ey, Y, "Y"), (&mut ez, Z, "Z")];
+          for (val, color, label) in axes {
+            ui.colored_label(color, label);
+            ui.add_sized(
+              [DRAG_WIDTH, ui.available_height()],
+              egui::DragValue::new(val)
+                .max_decimals(1)
+                .speed(0.5)
+                .suffix("°"),
+            );
+          }
         });
-        self.rotation = glam::Quat::from_euler(
+        self.rotation = Quat::from_euler(
           glam::EulerRot::XYZ,
           ex.to_radians(),
           ey.to_radians(),
@@ -90,12 +112,26 @@ impl Component for Transform {
 
         ui.label("Scale");
         ui.horizontal(|ui| {
-          ui.colored_label(X, "X");
-          ui.add(egui::DragValue::new(&mut self.scale.x).speed(0.01));
-          ui.colored_label(Y, "Y");
-          ui.add(egui::DragValue::new(&mut self.scale.y).speed(0.01));
-          ui.colored_label(Z, "Z");
-          ui.add(egui::DragValue::new(&mut self.scale.z).speed(0.01));
+          for (val, color) in [
+            (&mut self.scale.x, X),
+            (&mut self.scale.y, Y),
+            (&mut self.scale.z, Z),
+          ] {
+            ui.colored_label(
+              color,
+              if color == X {
+                "X"
+              } else if color == Y {
+                "Y"
+              } else {
+                "Z"
+              },
+            );
+            ui.add_sized(
+              [DRAG_WIDTH, ui.available_height()],
+              egui::DragValue::new(val).max_decimals(1).speed(0.01),
+            );
+          }
         });
         ui.end_row();
       });

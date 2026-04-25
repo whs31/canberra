@@ -37,7 +37,6 @@ Built-in components in `canberra_engine/src/components/`:
 - `Camera` — perspective projection (fov, aspect, near/far)
 - `Mesh` — `Vec<Vertex>` + `Vec<u16>` indices; ships a built-in cube
 - `Material` — RGBA color `[f32; 4]`
-- `DebugUI` — callback-based egui drawing
 
 ### Renderer (`canberra_engine/src/renderer/`)
 

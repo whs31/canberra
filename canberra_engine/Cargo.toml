@@ -20,4 +20,6 @@ bytemuck = { workspace = true, features = ["derive"] }
 glam = { workspace = true, features = ["bytemuck"] }
 num-traits = { workspace = true }
 serde = { workspace = true }
+postcard = { workspace = true }
+typetag = { workspace = true }
 uuid = { workspace = true, features = ["v4", "serde"] }

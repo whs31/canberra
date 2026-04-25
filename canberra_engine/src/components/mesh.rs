@@ -8,6 +8,7 @@ pub struct Mesh {
   pub indices: Vec<u16>,
 }
 
+#[typetag::serde]
 impl Component for Mesh {
   fn name(&self) -> &'static str {
     "Mesh"

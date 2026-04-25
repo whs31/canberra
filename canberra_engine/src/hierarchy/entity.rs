@@ -3,7 +3,6 @@ use std::{any::TypeId, collections::HashMap};
 use serde::{Deserialize, Serialize, de::Deserializer, ser::Serializer};
 use uuid::Uuid;
 
-use super::component_data::ComponentData;
 use crate::Component;
 
 #[derive(Debug)]
@@ -71,49 +70,45 @@ impl Entity {
   }
 }
 
-// ── serde ────────────────────────────────────────────────────────────────────
-
 impl Serialize for Entity {
   fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
     #[derive(Serialize)]
-    struct Ser<'a> {
+    struct EntityFields<'a> {
       id: &'a Uuid,
       name: &'a str,
-      components: Vec<ComponentData>,
+      components: Vec<&'a Box<dyn Component>>,
       children: &'a [Entity],
     }
-    let components = self
-      .components
-      .values()
-      .filter_map(|c| ComponentData::from_component(c.as_ref()))
-      .collect();
-    Ser {
+
+    let fields = EntityFields {
       id: &self.id,
       name: &self.name,
-      components,
+      components: self.components.values().collect(),
       children: &self.children,
-    }
-    .serialize(s)
+    };
+
+    fields.serialize(s)
   }
 }
 
 impl<'de> Deserialize<'de> for Entity {
   fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
     #[derive(Deserialize)]
-    struct De {
+    struct EntityFields {
       id: Uuid,
       name: String,
-      components: Vec<ComponentData>,
+      components: Vec<Box<dyn Component>>,
       #[serde(default)]
       children: Vec<Entity>,
     }
-    let raw = De::deserialize(d)?;
-    let mut components: HashMap<TypeId, Box<dyn Component>> =
-      HashMap::with_capacity(raw.components.len());
-    for cd in raw.components {
-      let (tid, c) = cd.into_keyed_component();
-      components.insert(tid, c);
+
+    let raw = EntityFields::deserialize(d)?;
+
+    let mut components = HashMap::with_capacity(raw.components.len());
+    for component in raw.components {
+      components.insert(component.type_id(), component);
     }
+
     Ok(Self {
       id: raw.id,
       name: raw.name,
