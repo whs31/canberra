@@ -3,14 +3,14 @@ use wgpu::util::DeviceExt;
 use crate::components::Mesh;
 
 #[derive(Debug, Clone)]
-pub struct GpuMesh {
-  pub vertex_buffer: wgpu::Buffer,
-  pub index_buffer: wgpu::Buffer,
-  pub index_count: u32,
+pub(crate) struct GpuMesh {
+  pub(crate) vertex_buffer: wgpu::Buffer,
+  pub(crate) index_buffer: wgpu::Buffer,
+  pub(crate) index_count: u32,
 }
 
 impl GpuMesh {
-  pub fn upload(device: &wgpu::Device, mesh: &Mesh) -> Self {
+  pub(crate) fn upload(device: &wgpu::Device, mesh: &Mesh) -> Self {
     let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
       label: Some("Mesh Vertex Buffer"),
       contents: bytemuck::cast_slice(&mesh.vertices),

@@ -7,26 +7,17 @@ use crate::{
   components::{Material, Mesh, Transform},
 };
 
+mod camera_uniform;
 mod gpu_mesh;
+mod object_uniform_data;
 
-pub use self::gpu_mesh::GpuMesh;
+pub(crate) use self::{
+  camera_uniform::CameraUniform, gpu_mesh::GpuMesh, object_uniform_data::ObjectUniformData,
+};
 
 const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
 const OBJECT_STRIDE: u64 = 256;
 const MAX_OBJECTS: u64 = 256;
-
-#[repr(C)]
-#[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
-struct CameraUniform {
-  view_proj: [[f32; 4]; 4],
-}
-
-#[repr(C)]
-#[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
-struct ObjectUniformData {
-  model: [[f32; 4]; 4],
-  color: [f32; 4],
-}
 
 pub struct Renderer {
   pipeline: wgpu::RenderPipeline,
@@ -56,7 +47,7 @@ impl Renderer {
         ty: wgpu::BindingType::Buffer {
           ty: wgpu::BufferBindingType::Uniform,
           has_dynamic_offset: false,
-          min_binding_size: wgpu::BufferSize::new(std::mem::size_of::<CameraUniform>() as u64),
+          min_binding_size: wgpu::BufferSize::new(CameraUniform::size()),
         },
         count: None,
       }],
@@ -64,7 +55,7 @@ impl Renderer {
 
     let camera_buffer = device.create_buffer(&wgpu::BufferDescriptor {
       label: Some("camera_buffer"),
-      size: std::mem::size_of::<CameraUniform>() as u64,
+      size: CameraUniform::size(),
       usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
       mapped_at_creation: false,
     });
@@ -86,7 +77,7 @@ impl Renderer {
         ty: wgpu::BindingType::Buffer {
           ty: wgpu::BufferBindingType::Uniform,
           has_dynamic_offset: true,
-          min_binding_size: wgpu::BufferSize::new(std::mem::size_of::<ObjectUniformData>() as u64),
+          min_binding_size: wgpu::BufferSize::new(ObjectUniformData::size()),
         },
         count: None,
       }],
@@ -107,7 +98,7 @@ impl Renderer {
         resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
           buffer: &object_buffer,
           offset: 0,
-          size: wgpu::BufferSize::new(std::mem::size_of::<ObjectUniformData>() as u64),
+          size: wgpu::BufferSize::new(ObjectUniformData::size()),
         }),
       }],
     });
