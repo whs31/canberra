@@ -46,24 +46,48 @@ impl Mesh {
   }
 }
 
+// 24 vertices (4 per face) so each vertex carries a single unambiguous face normal.
+// Winding is CCW when viewed from outside (front_face = Ccw, cull_mode = Back).
 #[rustfmt::skip]
 const CUBE_VERTICES: &[Vertex] = &[
-  Vertex { position: [-1.0, -1.0, -1.0] },
-  Vertex { position: [ 1.0, -1.0, -1.0] },
-  Vertex { position: [ 1.0, -1.0,  1.0] },
-  Vertex { position: [-1.0, -1.0,  1.0] },
-  Vertex { position: [-1.0,  1.0, -1.0] },
-  Vertex { position: [ 1.0,  1.0, -1.0] },
-  Vertex { position: [ 1.0,  1.0,  1.0] },
-  Vertex { position: [-1.0,  1.0,  1.0] },
+  // Front  (+Z)
+  Vertex { position: [-1.0, -1.0,  1.0], normal: [ 0.0,  0.0,  1.0] },
+  Vertex { position: [ 1.0, -1.0,  1.0], normal: [ 0.0,  0.0,  1.0] },
+  Vertex { position: [ 1.0,  1.0,  1.0], normal: [ 0.0,  0.0,  1.0] },
+  Vertex { position: [-1.0,  1.0,  1.0], normal: [ 0.0,  0.0,  1.0] },
+  // Back   (-Z)
+  Vertex { position: [ 1.0, -1.0, -1.0], normal: [ 0.0,  0.0, -1.0] },
+  Vertex { position: [-1.0, -1.0, -1.0], normal: [ 0.0,  0.0, -1.0] },
+  Vertex { position: [-1.0,  1.0, -1.0], normal: [ 0.0,  0.0, -1.0] },
+  Vertex { position: [ 1.0,  1.0, -1.0], normal: [ 0.0,  0.0, -1.0] },
+  // Top    (+Y)
+  Vertex { position: [ 1.0,  1.0, -1.0], normal: [ 0.0,  1.0,  0.0] },
+  Vertex { position: [-1.0,  1.0, -1.0], normal: [ 0.0,  1.0,  0.0] },
+  Vertex { position: [-1.0,  1.0,  1.0], normal: [ 0.0,  1.0,  0.0] },
+  Vertex { position: [ 1.0,  1.0,  1.0], normal: [ 0.0,  1.0,  0.0] },
+  // Bottom (-Y)
+  Vertex { position: [-1.0, -1.0, -1.0], normal: [ 0.0, -1.0,  0.0] },
+  Vertex { position: [ 1.0, -1.0, -1.0], normal: [ 0.0, -1.0,  0.0] },
+  Vertex { position: [ 1.0, -1.0,  1.0], normal: [ 0.0, -1.0,  0.0] },
+  Vertex { position: [-1.0, -1.0,  1.0], normal: [ 0.0, -1.0,  0.0] },
+  // Right  (+X)
+  Vertex { position: [ 1.0, -1.0,  1.0], normal: [ 1.0,  0.0,  0.0] },
+  Vertex { position: [ 1.0, -1.0, -1.0], normal: [ 1.0,  0.0,  0.0] },
+  Vertex { position: [ 1.0,  1.0, -1.0], normal: [ 1.0,  0.0,  0.0] },
+  Vertex { position: [ 1.0,  1.0,  1.0], normal: [ 1.0,  0.0,  0.0] },
+  // Left   (-X)
+  Vertex { position: [-1.0, -1.0, -1.0], normal: [-1.0,  0.0,  0.0] },
+  Vertex { position: [-1.0, -1.0,  1.0], normal: [-1.0,  0.0,  0.0] },
+  Vertex { position: [-1.0,  1.0,  1.0], normal: [-1.0,  0.0,  0.0] },
+  Vertex { position: [-1.0,  1.0, -1.0], normal: [-1.0,  0.0,  0.0] },
 ];
 
 #[rustfmt::skip]
 const CUBE_INDICES: &[u16] = &[
-  0, 2, 1,  0, 3, 2,
-  4, 5, 6,  4, 6, 7,
-  3, 6, 2,  3, 7, 6,
-  0, 1, 5,  0, 5, 4,
-  0, 7, 3,  0, 4, 7,
-  1, 2, 6,  1, 6, 5,
+   0,  1,  2,   0,  2,  3,  // Front
+   4,  5,  6,   4,  6,  7,  // Back
+   8,  9, 10,   8, 10, 11,  // Top
+  12, 13, 14,  12, 14, 15,  // Bottom
+  16, 17, 18,  16, 18, 19,  // Right
+  20, 21, 22,  20, 22, 23,  // Left
 ];

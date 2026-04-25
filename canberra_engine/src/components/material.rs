@@ -2,22 +2,34 @@ use std::any::Any;
 
 use crate::Component;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
+pub enum ShaderKind {
+  #[default]
+  DefaultLit,
+  DefaultUnlit,
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Material {
   pub color: [f32; 4],
+  pub shader: ShaderKind,
 }
 
 impl Default for Material {
   fn default() -> Self {
     Self {
       color: [1.0, 1.0, 1.0, 1.0],
+      shader: ShaderKind::default(),
     }
   }
 }
 
 impl Material {
   pub fn with_color(color: [f32; 4]) -> Self {
-    Self { color }
+    Self {
+      color,
+      ..Default::default()
+    }
   }
 }
 
@@ -42,10 +54,26 @@ impl Component for Material {
       (b * 255.0) as u8,
       (a * 255.0) as u8,
     );
-    ui.horizontal(|ui| {
-      let (rect, _) = ui.allocate_exact_size(egui::vec2(32.0, 16.0), egui::Sense::hover());
-      ui.painter().rect_filled(rect, 3.0, swatch);
-      ui.label(format!("({r:.2}, {g:.2}, {b:.2}, {a:.2})"));
+    egui::Grid::new("material").num_columns(2).spacing([8.0, 4.0]).show(ui, |ui| {
+      ui.label("Color");
+      ui.horizontal(|ui| {
+        let (rect, _) = ui.allocate_exact_size(egui::vec2(32.0, 16.0), egui::Sense::hover());
+        ui.painter().rect_filled(rect, 3.0, swatch);
+        ui.label(format!("({r:.2}, {g:.2}, {b:.2}, {a:.2})"));
+      });
+      ui.end_row();
+
+      ui.label("Shader");
+      egui::ComboBox::from_id_salt("mat_shader")
+        .selected_text(match self.shader {
+          ShaderKind::DefaultLit => "Default Lit",
+          ShaderKind::DefaultUnlit => "Default Unlit",
+        })
+        .show_ui(ui, |ui| {
+          ui.selectable_value(&mut self.shader, ShaderKind::DefaultLit, "Default Lit");
+          ui.selectable_value(&mut self.shader, ShaderKind::DefaultUnlit, "Default Unlit");
+        });
+      ui.end_row();
     });
   }
 }

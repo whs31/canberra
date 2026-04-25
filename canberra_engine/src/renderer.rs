@@ -2,7 +2,7 @@ use glam::Mat4;
 
 use crate::{
   Entity, Scene, Vertex,
-  components::{Material, Mesh, Transform},
+  components::{Material, Mesh, ShaderKind, Transform},
 };
 
 mod asset_manager;
@@ -20,7 +20,8 @@ const OBJECT_STRIDE: u64 = 256;
 const MAX_OBJECTS: u64 = 256;
 
 pub struct Renderer {
-  pipeline: wgpu::RenderPipeline,
+  pipeline_lit: wgpu::RenderPipeline,
+  pipeline_unlit: wgpu::RenderPipeline,
   camera_buffer: wgpu::Buffer,
   camera_bind_group: wgpu::BindGroup,
   object_buffer: wgpu::Buffer,
@@ -37,7 +38,8 @@ impl Renderer {
     width: u32,
     height: u32,
   ) -> Self {
-    let shader = device.create_shader_module(wgpu::include_wgsl!("shader.wgsl"));
+    let shader_lit = device.create_shader_module(wgpu::include_wgsl!("shader_lit.wgsl"));
+    let shader_unlit = device.create_shader_module(wgpu::include_wgsl!("shader_unlit.wgsl"));
 
     let camera_bgl = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
       label: Some("camera_bgl"),
@@ -109,60 +111,14 @@ impl Renderer {
       immediate_size: 0,
     });
 
-    let vertex_layout = wgpu::VertexBufferLayout {
-      array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
-      step_mode: wgpu::VertexStepMode::Vertex,
-      attributes: &[wgpu::VertexAttribute {
-        offset: 0,
-        shader_location: 0,
-        format: wgpu::VertexFormat::Float32x3,
-      }],
-    };
-
-    let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-      label: Some("render_pipeline"),
-      layout: Some(&pipeline_layout),
-      vertex: wgpu::VertexState {
-        module: &shader,
-        entry_point: Some("vs_main"),
-        buffers: &[vertex_layout],
-        compilation_options: Default::default(),
-      },
-      fragment: Some(wgpu::FragmentState {
-        module: &shader,
-        entry_point: Some("fs_main"),
-        targets: &[Some(wgpu::ColorTargetState {
-          format: surface_format,
-          blend: Some(wgpu::BlendState::REPLACE),
-          write_mask: wgpu::ColorWrites::ALL,
-        })],
-        compilation_options: Default::default(),
-      }),
-      primitive: wgpu::PrimitiveState {
-        topology: wgpu::PrimitiveTopology::TriangleList,
-        strip_index_format: None,
-        front_face: wgpu::FrontFace::Ccw,
-        cull_mode: Some(wgpu::Face::Back),
-        polygon_mode: wgpu::PolygonMode::Fill,
-        unclipped_depth: false,
-        conservative: false,
-      },
-      depth_stencil: Some(wgpu::DepthStencilState {
-        format: DEPTH_FORMAT,
-        depth_write_enabled: Some(true),
-        depth_compare: Some(wgpu::CompareFunction::Less),
-        stencil: wgpu::StencilState::default(),
-        bias: wgpu::DepthBiasState::default(),
-      }),
-      multisample: wgpu::MultisampleState::default(),
-      multiview_mask: None,
-      cache: None,
-    });
+    let pipeline_lit = make_pipeline(device, &shader_lit, &pipeline_layout, surface_format);
+    let pipeline_unlit = make_pipeline(device, &shader_unlit, &pipeline_layout, surface_format);
 
     let (depth_texture, depth_view) = Self::make_depth_texture(device, width.max(1), height.max(1));
 
     Self {
-      pipeline,
+      pipeline_lit,
+      pipeline_unlit,
       camera_buffer,
       camera_bind_group,
       object_buffer,
@@ -249,10 +205,17 @@ impl Renderer {
       multiview_mask: None,
     });
 
-    pass.set_pipeline(&self.pipeline);
-    pass.set_bind_group(0, &self.camera_bind_group, &[]);
-
     for (i, (_, entity)) in renderables.iter().enumerate() {
+      let shader = entity
+        .get_component::<Material>()
+        .map(|m| m.shader)
+        .unwrap_or_default();
+      pass.set_pipeline(match shader {
+        ShaderKind::DefaultLit => &self.pipeline_lit,
+        ShaderKind::DefaultUnlit => &self.pipeline_unlit,
+      });
+      pass.set_bind_group(0, &self.camera_bind_group, &[]);
+
       let mesh = entity.get_component::<Mesh>().unwrap();
       let (_, gpu_mesh) = self.asset_manager.get_or_upload(device, mesh);
 
@@ -286,6 +249,68 @@ impl Renderer {
     let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
     (texture, view)
   }
+}
+
+fn make_pipeline(
+  device: &wgpu::Device,
+  shader: &wgpu::ShaderModule,
+  pipeline_layout: &wgpu::PipelineLayout,
+  surface_format: wgpu::TextureFormat,
+) -> wgpu::RenderPipeline {
+  device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+    label: Some("render_pipeline"),
+    layout: Some(pipeline_layout),
+    vertex: wgpu::VertexState {
+      module: shader,
+      entry_point: Some("vs_main"),
+      buffers: &[wgpu::VertexBufferLayout {
+        array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
+        step_mode: wgpu::VertexStepMode::Vertex,
+        attributes: &[
+          wgpu::VertexAttribute {
+            offset: 0,
+            shader_location: 0,
+            format: wgpu::VertexFormat::Float32x3,
+          },
+          wgpu::VertexAttribute {
+            offset: 12,
+            shader_location: 1,
+            format: wgpu::VertexFormat::Float32x3,
+          },
+        ],
+      }],
+      compilation_options: Default::default(),
+    },
+    fragment: Some(wgpu::FragmentState {
+      module: shader,
+      entry_point: Some("fs_main"),
+      targets: &[Some(wgpu::ColorTargetState {
+        format: surface_format,
+        blend: Some(wgpu::BlendState::REPLACE),
+        write_mask: wgpu::ColorWrites::ALL,
+      })],
+      compilation_options: Default::default(),
+    }),
+    primitive: wgpu::PrimitiveState {
+      topology: wgpu::PrimitiveTopology::TriangleList,
+      strip_index_format: None,
+      front_face: wgpu::FrontFace::Ccw,
+      cull_mode: Some(wgpu::Face::Back),
+      polygon_mode: wgpu::PolygonMode::Fill,
+      unclipped_depth: false,
+      conservative: false,
+    },
+    depth_stencil: Some(wgpu::DepthStencilState {
+      format: DEPTH_FORMAT,
+      depth_write_enabled: Some(true),
+      depth_compare: Some(wgpu::CompareFunction::Less),
+      stencil: wgpu::StencilState::default(),
+      bias: wgpu::DepthBiasState::default(),
+    }),
+    multisample: wgpu::MultisampleState::default(),
+    multiview_mask: None,
+    cache: None,
+  })
 }
 
 fn collect_renderables<'a>(entity: &'a Entity, parent_world: Mat4, out: &mut Vec<(Mat4, &'a Entity)>) {
