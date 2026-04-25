@@ -24,7 +24,7 @@ pub struct ApplicationState {
 impl ApplicationState {
   pub async fn new(
     window: Arc<winit::window::Window>,
-    scene_builder: Box<dyn FnOnce(&wgpu::Device) -> Scene>,
+    scene_builder: Box<dyn FnOnce() -> Scene>,
   ) -> Result<Self> {
     let size = window.inner_size();
 
@@ -73,7 +73,7 @@ impl ApplicationState {
       desired_maximum_frame_latency: 2,
     };
 
-    let scene = scene_builder(&device);
+    let scene = scene_builder();
     let inspector = Inspector::new();
     let renderer = Renderer::new(&device, surface_format, size.width, size.height);
 
@@ -161,9 +161,14 @@ impl ApplicationState {
       });
 
     let aspect = self.config.width as f32 / self.config.height as f32;
-    self
-      .renderer
-      .render(&self.device, &self.scene, &self.queue, &view, &mut encoder, aspect);
+    self.renderer.render(
+      &self.device,
+      &self.scene,
+      &self.queue,
+      &view,
+      &mut encoder,
+      aspect,
+    );
 
     // --- egui ---
     let raw_input = self.egui_state.take_egui_input(&self.window);

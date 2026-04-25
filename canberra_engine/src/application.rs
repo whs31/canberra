@@ -6,11 +6,11 @@ use crate::{Result, Scene};
 
 pub struct Application {
   pub state: Option<ApplicationState>,
-  scene_builder: Option<Box<dyn FnOnce(&wgpu::Device) -> Scene>>,
+  scene_builder: Option<Box<dyn FnOnce() -> Scene>>,
 }
 
 impl Application {
-  pub fn run<F: FnOnce(&wgpu::Device) -> Scene + 'static>(scene_builder: F) -> Result<()> {
+  pub fn run<F: FnOnce() -> Scene + 'static>(scene_builder: F) -> Result<()> {
     let event_loop = crate::window::event_loop()?;
     let mut app = Self {
       state: None,

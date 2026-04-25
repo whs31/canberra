@@ -1,7 +1,7 @@
 mod error;
 
 use canberra_engine::{
-  Application, DebugUI, Entity, Scene,
+  Application, Entity, Scene,
   components::{Camera, Material, Mesh, Transform},
 };
 use glam::Vec3;
@@ -9,7 +9,7 @@ use glam::Vec3;
 pub use self::error::{Error, Result};
 
 fn try_main() -> Result<()> {
-  Application::run(|device| {
+  Application::run(|| {
     let mut scene = Scene::new();
 
     // Camera

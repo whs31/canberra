@@ -1,7 +1,5 @@
 use std::any::Any;
 
-use wgpu::util::DeviceExt;
-
 use crate::{Component, Vertex};
 
 #[derive(Debug, Clone)]

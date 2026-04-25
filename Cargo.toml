@@ -45,6 +45,10 @@ bytemuck = { version = "1", features = ["derive"] }
 glam = { version = "0.32", features = ["bytemuck"] }
 num-traits = { version = "0.2" }
 
+# serde
+serde = { version = "1", features = ["derive"]}
+postcard = "1"
+
 [profile.release]
 opt-level = 3
 lto = true
